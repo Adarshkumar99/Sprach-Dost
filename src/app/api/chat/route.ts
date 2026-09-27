@@ -37,7 +37,8 @@ export async function POST(req: Request) {
   let system: string;
 
   if (mode === "lehrer") {
-    system = fillPrompt(LEHRER_SYSTEM, { LEVEL: level, TOPIC: topic || "free talk" });
+    system = fillPrompt(LEHRER_SYSTEM, { LEVEL: level, TOPIC: topic || "free talk" })
+      .replace('You are "Lehrer"', `You are "${avatarName}"`);
     const curriculum = findCurriculumBlock(level, topic);
     if (curriculum) system += `\n\n${curriculum}`;
   } else if (mode === "feedback") {
@@ -45,7 +46,7 @@ export async function POST(req: Request) {
   } else {
     // Anna mode: scenario-driven role-play
     const sc = getScenario(scenarioId);
-    system = fillPrompt(ANNA_SYSTEM, { LEVEL: level }).replace('Tum "Anna"', `Tum "${avatarName}"`);
+    system = fillPrompt(ANNA_SYSTEM, { LEVEL: level }).replace('You are "Anna"', `You are "${avatarName}"`);
     if (sc) {
       system += `\n\nSCENARIO: "${sc.title}" (${sc.category})
 ${sc.goal}

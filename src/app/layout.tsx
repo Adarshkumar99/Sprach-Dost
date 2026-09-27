@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "SprachDost — Deutsch bolega India 🇩🇪",
   description:
-    "Learn to SPEAK German (A1–C2) by talking with Anna & Lehrer — free AI avatars with voice. Built for Indian learners: Hinglish explanations, Goethe exam prep, zero cost to start.",
+    "Learn to SPEAK German (A1–C2) by talking with AI avatars — real voice conversations, simple English explanations, Goethe exam prep. Free to start, built for Indian learners.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

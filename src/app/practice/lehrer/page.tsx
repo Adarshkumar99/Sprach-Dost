@@ -137,11 +137,17 @@ export default function LehrerPage() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "lehrer", level, topic: topicArg ?? topic, messages }),
+        body: JSON.stringify({
+          mode: "lehrer",
+          level,
+          topic: topicArg ?? topic,
+          avatarName: AVATARS[avatarKey]?.name ?? "Lehrer",
+          messages,
+        }),
       });
       return res.json();
     },
-    [level, topic]
+    [level, topic, avatarKey]
   );
 
   const startLesson = async (t?: string) => {

@@ -1,69 +1,77 @@
-# 🇩🇪 SprachDost — Deutsch bolega India
+# SprachDost
 
-AI avatar se German bolke seekho — **A1 se C2** tak. Indian learners ke liye: Hinglish explanations, Goethe/TELC exam focus, aur **₹0 running cost**.
+**India will speak German.** 🇩🇪
 
-## 🎭 The Two Avatars
+An AI-powered German speaking coach built for Indian learners — from absolute beginner (A1) to mastery (C2), with Goethe/TELC exam preparation.
 
-| Avatar | Mode | Kya karta hai |
-|---|---|---|
-| **Anna** 🗣️ | `/practice/anna` | Real-life scenario conversations (cafe demo) — gentle corrections, hints |
-| **Lehrer** 👨‍🏫 | `/practice/lehrer` | **TUM topic choose karte ho** → wo teach karta hai, discuss karta hai, detailed feedback deta hai |
+---
 
-## 💰 100% Free Tech (no paid anything)
+## About
 
-- **Next.js** (Vercel free tier) — frontend + hosting
-- **Web Speech API** (browser built-in) — German TTS + German mic input — *unlimited, no key*
-- **Groq free tier** (`llama-3.3-70b-versatile`) — AI brain — *no credit card needed*
-- Works even **without any API key** — Anna has a full offline scripted demo!
+Most German learners in India complete months of coaching yet freeze when they have to actually *speak*. SprachDost fixes that with always-available AI avatar partners you can have real voice conversations with — in German — with instant corrections and simple English explanations.
 
-## 🚀 Local Run
+## Features
+
+### Conversation Mode — Anna & Friends
+- **55 real-life role-play scenarios** across 8 categories: Food & Drink, Travel, Daily Life, Work & Study, Health & Help, Social, Shopping, Exam Prep
+- Goethe A1/A2 speaking-exam mock scenarios (Teil 1–3 formats)
+- Real-time voice conversation: the avatar speaks German out loud, listens to your answer, and corrects you
+- Live speech transcript while you talk
+
+### Teacher Mode — Lehrer
+- You choose the topic, the teacher builds the lesson: grammar rules first, examples next, practice last
+- Level-aware teaching (A1 → C2)
+- Structured curriculum engine for A1 and A2: 22 topics, 270+ core vocabulary items with articles and grammar maps
+- Detailed correction feedback after every reply
+
+### Feedback Reports
+- End-of-session report: score, strengths, mistakes with corrections, vocabulary learned, and next steps
+
+### Avatars
+- 6 selectable characters (Anna, Markus, Lena, Raj, Sophie, Jonas) with distinct looks and male/female voices
+- Preference saved across sessions
+
+### Technical details
+- Voice synthesis & recognition via the browser Web Speech API (German + English voices, no cost)
+- AI conversations via Groq (Llama 3.3) with scripted graceful degradation when no key is configured
+- CEFR level selection per session (A1–C2)
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) + React 19 + TypeScript |
+| Styling | Tailwind CSS 4 |
+| Speech I/O | Web Speech API (SpeechSynthesis + SpeechRecognition) |
+| LLM | Groq API — `llama-3.3-70b-versatile` (free tier) |
+| Avatars | Hand-built animated SVG with lip-sync |
+
+## Run locally
 
 ```bash
 npm install
 npm run dev
-# open http://localhost:3000
 ```
 
-**Best browser:** Chrome / Edge (best German voices + mic support). Mic permission allow karna.
+Open http://localhost:3000 — best in Chrome or Edge (microphone + German voices).
 
-## 🔑 AI unlock (optional, 2 min, free)
+Environment (optional, enables AI modes):
 
-Anna (dynamic) + Lehrer ke liye:
-
-1. https://console.groq.com → sign up (Google login)
-2. API Keys → Create API Key → copy
-3. `.env.local` file banao (`.env.local.example` copy karke):
-   ```
-   GROQ_API_KEY=gsk_your_key_here
-   ```
-4. `npm run dev` restart
-
-Bina key ke: **Anna offline demo mode chalti hai** — full cafe conversation with voice.
-
-## ☁️ Deploy (Vercel, free)
-
-```bash
-# 1. GitHub repo banao, push karo:
-git init && git add . && git commit -m "SprachDost MVP"
-git remote add origin https://github.com/<you>/sprachdost.git
-git push -u origin main
-
-# 2. vercel.com → import repo → Environment Variables mein GROQ_API_KEY
-#    add karo → Deploy. Live: sprachdost.vercel.app (custom .in domain later)
+```
+GROQ_API_KEY=your_key_here
 ```
 
-## 🗺️ Roadmap
+## Roadmap
 
-- [x] Landing page + waitlist + pricing
-- [x] Anna: cafe scenario voice demo (offline + AI)
-- [x] Lehrer: topic-based teaching with level select (A1–C2)
-- [x] Session-end feedback report
-- [ ] Supabase auth + progress/streaks save
-- [ ] Vocab import (CSV) + spaced repetition
-- [ ] PWA install (Add to Home Screen)
-- [ ] ₹199/mo Pro (Razorpay) + unlimited + pronunciation scoring
-- [ ] Play Store wrapper (Capacitor) — same code
+- [x] Landing page, waitlist, pricing section
+- [x] 55 scenario voice conversations with feedback reports
+- [x] Topic-based teacher mode with level selection (A1–C2)
+- [x] 6 avatars with lip-sync
+- [ ] Auth + progress tracking (Supabase)
+- [ ] Vocabulary lists + spaced repetition
+- [ ] PWA install / Play Store (Capacitor)
+- [ ] Pro tier (unlimited sessions, pronunciation scoring, neural voices)
 
 ---
 
-Made with ❤️ in India. *Sprichst du schon Deutsch? Jetzt schon!* 🚀
+Built for Indian German learners. *Sprichst du schon Deutsch? Jetzt schon.*

@@ -260,7 +260,7 @@ export function listen(
         opts.onInterim?.(alt.transcript);
       }
     };
-    // user bolna band kare → turant stop karo (fast response, no long wait)
+    // user finishes speaking → stop immediately (fast response, no long wait)
     rec.onspeechend = () => {
       setTimeout(() => {
         done(() => {
