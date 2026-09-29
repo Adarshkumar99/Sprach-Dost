@@ -57,50 +57,52 @@ German level: strictly ${level}. Keep each German line max 20 words.`;
     }
   }
 
-  try {
-    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        temperature: 0.7,
-        max_tokens: 500,
-        messages: [
-          { role: "system", content: system },
-          ...messages.slice(-12),
-        ],
-      }),
-    });
+  // Model priority: env override → preferred → fallbacks (Groq retires models over time)
+  const MODELS = [
+    process.env.GROQ_MODEL,
+    "llama-3.1-8b-instant",
+    "openai/gpt-oss-120b",
+    "meta-llama/llama-4-scout-17b-16e-instruct",
+  ].filter((m): m is string => Boolean(m));
 
-    if (!res.ok) {
-      const errTxt = await res.text();
-      if (res.status === 400 || res.status === 404) {
-        const retry = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+  try {
+    const allMessages = [
+      { role: "system" as const, content: system },
+      ...messages.slice(-12),
+    ];
+
+    let lastError = "no model responded";
+
+    for (const model of MODELS) {
+      try {
+        const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
           method: "POST",
           headers: {
             Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "llama-3.1-8b-instant",
+            model,
             temperature: 0.7,
             max_tokens: 500,
-            messages: [{ role: "system", content: system }, ...messages.slice(-12)],
+            messages: allMessages,
           }),
         });
-        if (retry.ok) {
-          const d = await retry.json();
-          return NextResponse.json({ reply: d.choices[0].message.content as string });
+
+        if (res.ok) {
+          const data = await res.json();
+          const reply = data.choices?.[0]?.message?.content;
+          if (reply) return NextResponse.json({ reply, model });
         }
+        lastError = await res.text();
+        continue; // try next model on ANY failure
+      } catch (e: unknown) {
+        lastError = e instanceof Error ? e.message : "fetch failed";
+        continue;
       }
-      return NextResponse.json({ error: errTxt }, { status: 502 });
     }
 
-    const data = await res.json();
-    return NextResponse.json({ reply: data.choices[0].message.content as string });
+    return NextResponse.json({ error: lastError, tried: MODELS }, { status: 502 });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "unknown error";
     return NextResponse.json({ error: msg }, { status: 500 });
