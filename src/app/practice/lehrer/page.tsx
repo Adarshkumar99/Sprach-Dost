@@ -6,7 +6,7 @@ import Avatar from "@/components/Avatar";
 import AvatarPicker from "@/components/AvatarPicker";
 import ChatList, { type ChatMsg } from "@/components/ChatList";
 import MicButton from "@/components/MicButton";
-import { speak, stopSpeaking, listen, loadVoices, isSpeakingSupported } from "@/lib/speech";
+import { speak, stopSpeaking, listen, loadVoices, isSpeakingSupported, isEcho } from "@/lib/speech";
 import { parseReply, parseFeedback, type FeedbackReport } from "@/lib/parse";
 import { getStoredAvatar, storeAvatar, AVATARS } from "@/lib/avatars";
 
@@ -50,6 +50,7 @@ export default function LehrerPage() {
   const voiceOnRef = useRef(true);
   const handleStudentRef = useRef<(t: string) => Promise<void>>(async () => {});
   const micRetryRef = useRef(0);
+  const avatarTextRef = useRef(""); // last thing Lehrer spoke — for echo detection
 
   voiceOnRef.current = voiceOn;
 
@@ -70,6 +71,10 @@ export default function LehrerPage() {
       .then(({ text }) => {
         setListening(false);
         setTextInput("");
+        if (isEcho(text, avatarTextRef.current)) {
+          setTimeout(() => autoMic(), 250); // speaker echo — listen again for the real answer
+          return;
+        }
         micRetryRef.current = 0;
         handleStudentRef.current(text);
       })
@@ -87,6 +92,7 @@ export default function LehrerPage() {
 
   const avatarTalk = useCallback(
     (german: string, erklarung: string, after?: () => void) => {
+      avatarTextRef.current = `${german} ${erklarung}`; // remember for echo detection
       const finish = () => {
         setSpeaking(false);
         if (after) after();
@@ -241,6 +247,7 @@ export default function LehrerPage() {
       const { text } = await listen("de-DE", { onInterim: (t) => setTextInput(t) });
       setListening(false);
       setTextInput("");
+      if (isEcho(text, avatarTextRef.current)) return; // avatar's own voice leaked into the mic
       await handleStudentRef.current(text);
     } catch (e: unknown) {
       setListening(false);

@@ -6,7 +6,7 @@ import Avatar from "@/components/Avatar";
 import AvatarPicker from "@/components/AvatarPicker";
 import ChatList, { type ChatMsg } from "@/components/ChatList";
 import MicButton from "@/components/MicButton";
-import { speak, stopSpeaking, listen, loadVoices } from "@/lib/speech";
+import { speak, stopSpeaking, listen, loadVoices, isEcho } from "@/lib/speech";
 import { parseReply, parseFeedback, type FeedbackReport } from "@/lib/parse";
 import { SCENARIOS, SCENARIO_CATEGORIES, getScenario, SCENARIO_LEVEL_COLORS, type Scenario } from "@/lib/scenarios";
 import { getStoredAvatar, storeAvatar } from "@/lib/avatars";
@@ -40,6 +40,7 @@ export default function AnnaPage() {
   const handleStudentRef = useRef<(t: string) => Promise<void>>(async () => {});
   const micRetryRef = useRef(0);
   const avatarNameRef = useRef("Anna");
+  const avatarTextRef = useRef(""); // last thing the avatar spoke — used to filter speaker echo
 
   voiceOnRef.current = voiceOn;
 
@@ -65,6 +66,11 @@ export default function AnnaPage() {
       .then(({ text }) => {
         setListening(false);
         setTextInput("");
+        // echo guard: if the mic just heard the avatar's own voice from the speakers, drop it
+        if (isEcho(text, avatarTextRef.current)) {
+          setTimeout(() => autoMic(), 250); // listen again for the real user answer
+          return;
+        }
         micRetryRef.current = 0;
         handleStudentRef.current(text);
       })
@@ -82,6 +88,7 @@ export default function AnnaPage() {
 
   const avatarTalk = useCallback(
     (german: string, erklarung: string, after?: () => void) => {
+      avatarTextRef.current = `${german} ${erklarung}`; // remember for echo detection
       const finish = () => {
         setSpeaking(false);
         if (after) after();
@@ -236,6 +243,7 @@ export default function AnnaPage() {
       const { text } = await listen("de-DE", { onInterim: (t) => setTextInput(t) });
       setListening(false);
       setTextInput("");
+      if (isEcho(text, avatarTextRef.current)) return; // avatar's own voice leaked into the mic
       await handleStudentRef.current(text);
     } catch (e: unknown) {
       setListening(false);

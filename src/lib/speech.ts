@@ -297,3 +297,19 @@ export function keywordScore(spoken: string, keywords: string[]): number {
   }
   return hits;
 }
+
+/**
+ * Echo detection — the mic can pick up the avatar's own TTS from the speakers,
+ * which looks like a user answer. Returns true if `heard` is basically `spokenText`.
+ */
+export function isEcho(heard: string, spokenText: string): boolean {
+  const h = norm(heard);
+  const s = norm(spokenText);
+  if (!h || !s) return false;
+  const hWords = new Set(h.split(" ").filter((w) => w.length > 2));
+  if (hWords.size === 0) return false;
+  const sWords = new Set(s.split(" "));
+  let overlap = 0;
+  for (const w of hWords) if (sWords.has(w)) overlap++;
+  return overlap / hWords.size >= 0.55; // mostly the same → echo
+}
