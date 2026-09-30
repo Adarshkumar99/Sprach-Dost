@@ -1,5 +1,17 @@
 /** Parse the marked avatar replies (GERMAN: / KORREKTUR: / ERKLARUNG: / HINT: / FEEDBACK sections) */
 
+/** Strip markdown/AI artifacts so TTS never reads "asterisk asterisk" out loud */
+export function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, "$1") // **bold**
+    .replace(/\*([^*]+)\*/g, "$1") // *italic*
+    .replace(/__([^_]+)__/g, "$1") // __bold__
+    .replace(/`([^`]*)`/g, "$1") // `code`
+    .replace(/^#{1,6}\s*/gm, "") // # headings
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export type AvatarReply = {
   german: string;
   korrektur: string;
@@ -7,9 +19,6 @@ export type AvatarReply = {
   hint: string;
   raw: string;
 };
-
-const MARKERS: { key: keyof Omit<AvatarReply, "raw">; patterns: RegExp }[] = [] as never;
-
 export function parseReply(text: string): AvatarReply {
   const out: AvatarReply = { german: "", korrektur: "", erklarung: "", hint: "", raw: text };
 
@@ -33,7 +42,7 @@ export function parseReply(text: string): AvatarReply {
   }
 
   if (found.length === 0) {
-    out.german = text.trim();
+    out.german = stripMarkdown(text);
     return out;
   }
 
@@ -41,7 +50,7 @@ export function parseReply(text: string): AvatarReply {
   for (let i = 0; i < found.length; i++) {
     const from = found[i].end;
     const to = i + 1 < found.length ? found[i + 1].start : text.length;
-    const val = text.slice(from, to).trim();
+    const val = stripMarkdown(text.slice(from, to));
     const key = found[i].key as keyof AvatarReply;
     if (key !== "raw") out[key] = val;
   }
@@ -61,14 +70,14 @@ export type FeedbackReport = {
 export function parseFeedback(text: string): FeedbackReport {
   const get = (re: RegExp) => {
     const m = text.match(re);
-    return m ? m[1].trim() : "";
+    return m ? stripMarkdown(m[1]) : "";
   };
   return {
     score: get(/SCORE:\s*([^\n]*)/i),
     strengths: get(/STRENGTHS:\s*([\s\S]*?)(?=\n[A-Z]+:|$)/i),
     mistakes: get(/MISTAKES:\s*([\s\S]*?)(?=\n[A-Z]+:|$)/i),
     vocab: get(/VOCAB:\s*([\s\S]*?)(?=\n[A-Z]+:|$)/i),
-    next: get(/NEXT:\s*([\s\S]*?)(?=\n[A-Z]+:|$)/i),
+    next: get(/NEXT:\s*[\s\S]*?$/i),
     raw: text,
   };
 }
