@@ -55,12 +55,28 @@ export default function Avatar({
           />
         )}
         <svg width={size} height={size} viewBox="0 0 200 200">
-          {/* neck + shirt */}
+          {/* backdrop circle */}
+          <defs>
+            <radialGradient id={`bg-${preset.key}`} cx="50%" cy="35%" r="75%">
+              <stop offset="0%" stopColor={shirt} stopOpacity="0.25" />
+              <stop offset="100%" stopColor={shirt} stopOpacity="0.05" />
+            </radialGradient>
+          </defs>
+          <circle cx="100" cy="105" r="95" fill={`url(#bg-${preset.key})`} />
+
+          {/* neck + shirt with collar */}
           <rect x="88" y="150" width="24" height="20" rx="6" fill={skin} />
           <path d="M 55 200 Q 60 168 100 166 Q 140 168 145 200 Z" fill={shirt} />
+          <path d="M 88 168 L 100 178 L 112 168" stroke="#ffffff" strokeOpacity="0.5" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+
+          {/* ears */}
+          <ellipse cx="48" cy="108" rx="7" ry="11" fill={skin} />
+          <ellipse cx="152" cy="108" rx="7" ry="11" fill={skin} />
 
           {/* head */}
           <ellipse cx="100" cy="105" rx="52" ry="56" fill={skin} />
+          {/* face soft shadow bottom */}
+          <ellipse cx="100" cy="140" rx="34" ry="14" fill="#00000008" />
 
           {/* hair by style */}
           {hairStyle === "short" && (
@@ -121,6 +137,10 @@ export default function Avatar({
           <path d={mouthPath} fill={speaking ? "#7a2d3b" : "#9c4a55"} stroke="#8c3f4c" strokeWidth="2" strokeLinejoin="round" />
           {speaking && o > 0.45 && (
             <ellipse cx="100" cy={130 + o * 9} rx={7 * o} ry={3.5 * o} fill="#e6707e" opacity="0.9" />
+          )}
+          {/* soft smile line when idle */}
+          {!speaking && (
+            <path d="M 88 126 Q 100 132 112 126" stroke="#b57a83" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.6" />
           )}
 
           {/* cheeks */}

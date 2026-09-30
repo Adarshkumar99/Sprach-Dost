@@ -6,8 +6,9 @@ import Avatar from "@/components/Avatar";
 import AvatarPicker from "@/components/AvatarPicker";
 import ChatList, { type ChatMsg } from "@/components/ChatList";
 import MicButton from "@/components/MicButton";
-import { speak, stopSpeaking, listen, loadVoices, isSpeakingSupported, isEcho } from "@/lib/speech";
+import { speakSmart, stopSpeaking, listen, loadVoices, isSpeakingSupported, isEcho } from "@/lib/speech";
 import { parseReply, parseFeedback, type FeedbackReport } from "@/lib/parse";
+import { recordSession, countVocab } from "@/lib/progress";
 import { getStoredAvatar, storeAvatar, AVATARS } from "@/lib/avatars";
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
@@ -104,12 +105,12 @@ export default function LehrerPage() {
       }
       setSpeaking(true);
       const isFemale = ["anna", "lena", "sophie"].includes(avatarKey);
-      speak(german, "de-DE", {
+      void speakSmart(german, "de-DE", {
         genderHint: isFemale ? "anna" : "lehrer",
         onError: (err) => setVoiceError(err),
         onEnd: () => {
           if (erklarung) {
-            speak(erklarung, "en-IN", {
+            void speakSmart(erklarung, "en-IN", {
               genderHint: isFemale ? "anna" : "lehrer",
               rate: 1.0,
               onError: (err) => setVoiceError(err),
@@ -131,7 +132,7 @@ export default function LehrerPage() {
       return;
     }
     loadVoices().then(() => {
-      speak("Guten Tag! Ich bin dein Lehrer.", "de-DE", {
+      void speakSmart("Guten Tag! Ich bin dein Lehrer.", "de-DE", {
         genderHint: "lehrer",
         onError: (err) => setVoiceError(err),
       });
@@ -230,7 +231,17 @@ export default function LehrerPage() {
         }),
       });
       const data = await res.json();
-      setFeedback(data.reply ? parseFeedback(data.reply) : null);
+      if (data.reply) {
+        const rep = parseFeedback(data.reply);
+        setFeedback(rep);
+        recordSession({
+          minutes: Math.max(3, Math.round(transcriptRef.current.length * 0.6)),
+          words: countVocab(rep.vocab),
+          level,
+        });
+      } else {
+        setFeedback(null);
+      }
     } catch {
       setFeedback(null);
     }

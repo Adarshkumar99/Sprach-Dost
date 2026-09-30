@@ -188,7 +188,64 @@ export function stopSpeaking() {
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
     window.speechSynthesis.cancel();
   }
+  if (currentAudio) {
+    try {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+    } catch {
+      /* noop */
+    }
+    currentAudio = null;
+  }
 }
+
+let currentAudio: HTMLAudioElement | null = null;
+
+/**
+ * Smart speak: tries the neural voice API (if ELEVENLABS_API_KEY is configured
+ * on the server), otherwise seamlessly falls back to the free browser voice.
+ * Same callbacks as speak(), so callers don't need to care which engine plays.
+ */
+export async function speakSmart(
+  text: string,
+  lang: string,
+  opts: Parameters<typeof speak>[2] = {}
+) {
+  if (typeof window === "undefined") return;
+
+  try {
+    const res = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, lang, gender: opts.genderHint ?? "anna" }),
+    });
+    const ct = res.headers.get("content-type") ?? "";
+    if (res.ok && ct.includes("audio")) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      currentAudio = audio;
+      audio.onplay = () => opts.onStart?.();
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        currentAudio = null;
+        opts.onEnd?.();
+      };
+      audio.onerror = () => {
+        URL.revokeObjectURL(url);
+        currentAudio = null;
+        opts.onEnd?.();
+      };
+      await audio.play();
+      return;
+    }
+  } catch {
+    /* fall through to browser voice */
+  }
+
+  speak(text, lang, opts);
+}
+
 
 export type ListenResult = {
   text: string;

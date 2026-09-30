@@ -33,8 +33,11 @@ Most German learners in India complete months of coaching yet freeze when they h
 
 ### Technical details
 - Voice synthesis & recognition via the browser Web Speech API (German + English voices, no cost)
-- AI conversations via Groq (Llama 3.3) with scripted graceful degradation when no key is configured
+- Optional premium neural voices via ElevenLabs — the client falls back to free browser voices automatically
+- AI conversations via Groq with automatic model fallback
 - CEFR level selection per session (A1–C2)
+- Local progress tracking: sessions, practice minutes, day streak, words learned
+- Installable as a PWA (Add to Home Screen)
 
 ## Tech Stack
 
@@ -42,9 +45,10 @@ Most German learners in India complete months of coaching yet freeze when they h
 |---|---|
 | Framework | Next.js 16 (App Router) + React 19 + TypeScript |
 | Styling | Tailwind CSS 4 |
-| Speech I/O | Web Speech API (SpeechSynthesis + SpeechRecognition) |
-| LLM | Groq API — `llama-3.3-70b-versatile` (free tier) |
+| Speech I/O | Web Speech API (free) + optional ElevenLabs neural voices |
+| LLM | Groq API with model fallback |
 | Avatars | Hand-built animated SVG with lip-sync |
+| Distribution | PWA (manifest + standalone display) |
 
 ## Run locally
 
@@ -67,10 +71,13 @@ GROQ_API_KEY=your_key_here
 - [x] 55 scenario voice conversations with feedback reports
 - [x] Topic-based teacher mode with level selection (A1–C2)
 - [x] 6 avatars with lip-sync
-- [ ] Auth + progress tracking (Supabase)
+- [x] Local progress tracking (sessions, streak, words learned)
+- [x] PWA manifest (installable on phones)
+- [x] Optional neural voice layer with free fallback
+- [ ] Auth + cloud progress sync (Supabase)
 - [ ] Vocabulary lists + spaced repetition
-- [ ] PWA install / Play Store (Capacitor)
-- [ ] Pro tier (unlimited sessions, pronunciation scoring, neural voices)
+- [ ] Play Store wrapper (Capacitor)
+- [ ] Pro tier (unlimited sessions, pronunciation scoring)
 
 ---
 

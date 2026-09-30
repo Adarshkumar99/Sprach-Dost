@@ -13,9 +13,17 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SprachDost — Deutsch bolega India 🇩🇪",
+  title: "SprachDost — India will speak German 🇩🇪",
   description:
     "Learn to SPEAK German (A1–C2) by talking with AI avatars — real voice conversations, simple English explanations, Goethe exam prep. Free to start, built for Indian learners.",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  themeColor: "#0b1020",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "SprachDost",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -6,8 +6,9 @@ import Avatar from "@/components/Avatar";
 import AvatarPicker from "@/components/AvatarPicker";
 import ChatList, { type ChatMsg } from "@/components/ChatList";
 import MicButton from "@/components/MicButton";
-import { speak, stopSpeaking, listen, loadVoices, isEcho } from "@/lib/speech";
+import { speakSmart, stopSpeaking, listen, loadVoices, isEcho } from "@/lib/speech";
 import { parseReply, parseFeedback, type FeedbackReport } from "@/lib/parse";
+import { recordSession, countVocab } from "@/lib/progress";
 import { SCENARIOS, SCENARIO_CATEGORIES, getScenario, SCENARIO_LEVEL_COLORS, type Scenario } from "@/lib/scenarios";
 import { getStoredAvatar, storeAvatar } from "@/lib/avatars";
 
@@ -100,12 +101,12 @@ export default function AnnaPage() {
       }
       setSpeaking(true);
       const isFemale = ["anna", "lena", "sophie"].includes(avatarKey);
-      speak(german, "de-DE", {
+      void speakSmart(german, "de-DE", {
         genderHint: isFemale ? "anna" : "lehrer",
         onError: () => {},
         onEnd: () => {
           if (erklarung) {
-            speak(erklarung, "en-IN", {
+            void speakSmart(erklarung, "en-IN", {
               genderHint: isFemale ? "anna" : "lehrer",
               rate: 1.0,
               onError: () => {},
@@ -226,7 +227,17 @@ export default function AnnaPage() {
         }),
       });
       const data = await res.json();
-      setFeedback(data.reply ? parseFeedback(data.reply) : null);
+      if (data.reply) {
+        const rep = parseFeedback(data.reply);
+        setFeedback(rep);
+        recordSession({
+          minutes: Math.max(3, Math.round(transcriptRef.current.length * 0.6)),
+          words: countVocab(rep.vocab),
+          level,
+        });
+      } else {
+        setFeedback(null);
+      }
     } catch {
       setFeedback(null);
     }

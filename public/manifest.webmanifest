@@ -1,0 +1,12 @@
+{
+  "name": "SprachDost — Learn German by Speaking",
+  "short_name": "SprachDost",
+  "description": "AI avatar partners for German speaking practice, A1 to C2. Built for Indian learners.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

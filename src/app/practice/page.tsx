@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
+import ProgressCard from "@/components/ProgressCard";
 
 export default function Practice() {
   return (
@@ -46,6 +47,8 @@ export default function Practice() {
       <p className="mt-10 text-xs opacity-50 text-center max-w-md">
         💡 Tip: For the best voice quality use Chrome or Edge, and allow microphone permission when asked.
       </p>
+
+      <ProgressCard />
     </main>
   );
 }
