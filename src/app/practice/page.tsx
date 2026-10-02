@@ -42,6 +42,21 @@ export default function Practice() {
           </div>
           <span className="btn-primary text-sm mt-2">Pick a topic →</span>
         </Link>
+
+        <Link
+          href="/vocab"
+          className="md:col-span-2 glass rounded-3xl p-8 flex flex-col sm:flex-row items-center gap-6 hover:scale-[1.01] hover:border-emerald-400/50 transition-all"
+        >
+          <div className="text-6xl">📇</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-xl mb-1">Vocabulary Trainer — Flashcards + Spaced Repetition</div>
+            <p className="text-sm opacity-70">
+              A1 (1,000) • A2 (1,500) • B1 (2,000) words with meanings & example sentences.
+              Cards come back right before you forget them — that&apos;s how they stick. 🔊 Audio for every word.
+            </p>
+          </div>
+          <span className="btn-primary text-sm whitespace-nowrap">Start training →</span>
+        </Link>
       </div>
 
       <p className="mt-10 text-xs opacity-50 text-center max-w-md">
