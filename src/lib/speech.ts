@@ -79,23 +79,51 @@ export function loadVoices(): Promise<SpeechSynthesisVoice[]> {
   return voiceLoadPromise;
 }
 
-export function pickVoice(voices: SpeechSynthesisVoice[], lang: string) {
+/**
+ * Scored voice picker — squeezes the most natural sound out of FREE voices:
+ *   Edge:  "Microsoft ... Online (Natural) Katja/Conrad"  → near-human neural, free
+ *   Chrome: "Google Deutsch"                                → online, quite natural
+ *   Apple: Melina / Anna / enhanced / premium / Siri        → best local quality
+ *   fallback: any same-language voice
+ */
+export function pickVoice(
+  voices: SpeechSynthesisVoice[],
+  lang: string,
+  genderHint?: "anna" | "lehrer"
+) {
   const pref = lang.toLowerCase();
   const base = pref.split("-")[0].split("_")[0];
   const same = voices.filter((v) => v.lang.toLowerCase().startsWith(base));
   if (same.length === 0) return null;
-  // Naturalness priority:
-  //  1. Chrome's "Google ..." online voices (most natural free TTS)
-  //  2. enhanced / premium / neural system voices
-  //  3. exact language match
-  //  4. any same-language voice
-  return (
-    same.find((v) => /google/i.test(v.name) && v.lang.toLowerCase() === pref) ||
-    same.find((v) => /google/i.test(v.name)) ||
-    same.find((v) => /(enhanced|premium|neural|natural)/i.test(v.name)) ||
-    same.find((v) => v.lang.toLowerCase() === pref) ||
-    same[0]
-  );
+
+  const preferFemale = genderHint !== "lehrer";
+  const score = (v: SpeechSynthesisVoice): number => {
+    const n = v.name.toLowerCase();
+    let s = 0;
+    // engine quality
+    if (/microsoft/.test(n) && /(online|natural)/.test(n)) s += 100; // Edge neural
+    if (/google/.test(n)) s += 85;                                    // Chrome online
+    if (/(natural|neural)/.test(n)) s += 60;
+    if (/(enhanced|premium|siri)/.test(n)) s += 50;                   // Apple quality tiers
+    if (!v.localService) s += 25;                                     // network voices are usually better
+    // known-good German voices by name
+    if (/(katja|melina|conrad|hedda|stefan|klaus)/.test(n)) s += 40;
+    if (/\banna\b/.test(n)) s += 30;
+    // gender fit
+    const female = /(female|katja|melina|hedda|petra|anna|lena|sabine|marlene|vicki)/.test(n);
+    const male = /(male|conrad|stefan|klaus|markus|jonas|rainer|yannick)/.test(n);
+    if (preferFemale && female) s += 20;
+    if (preferFemale && male) s -= 15;
+    if (!preferFemale && male) s += 20;
+    if (!preferFemale && female) s -= 15;
+    // exact locale match beats generic
+    if (v.lang.toLowerCase() === pref) s += 15;
+    // avoid known robotic/legacy voices
+    if (/(compact|espeak|samba|bad news|novelty)/.test(n)) s -= 40;
+    return s;
+  };
+
+  return same.reduce((best, v) => (score(v) > score(best) ? v : best), same[0]);
 }
 
 export function isSpeakingSupported(): boolean {
@@ -129,8 +157,9 @@ export function speak(
 
   const utter = new SpeechSynthesisUtterance(text);
   utter.lang = lang;
+  // natural pacing: a touch slower feels more human for language learners
   utter.rate = opts.rate ?? 0.92;
-  utter.pitch = opts.pitch ?? (opts.genderHint === "anna" ? 1.15 : 0.95);
+  utter.pitch = opts.pitch ?? (opts.genderHint === "anna" ? 1.1 : 0.9);
   utter.volume = 1;
 
   let finished = false;
@@ -162,7 +191,7 @@ export function speak(
   }
 
   loadVoices().then((voices) => {
-    const voice = pickVoice(voices, lang);
+    const voice = pickVoice(voices, lang, opts.genderHint);
     lastChosenVoice = voice ? `${voice.name} (${voice.lang})${voice.localService ? "" : " [online]"}` : "browser-default";
     dbg("voices", text, lang, `${voices.length} voices, using: ${lastChosenVoice}`);
     if (voice) utter.voice = voice;

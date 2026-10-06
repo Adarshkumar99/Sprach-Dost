@@ -34,10 +34,15 @@ if (!KEY) {
   process.exit(1);
 }
 
+// Ordered by efficiency: qwen is clean & cheap on the free tier,
+// gpt-oss models are highest quality but daily-token-limited and waste
+// tokens on hidden reasoning — gpt-oss-120b is tried first when its daily
+// budget has reset (best German quality).
 const MODELS = [
   process.env.GROQ_MODEL,
+  "qwen/qwen3.8-27b",
+  "openai/gpt-oss-20b",
   "openai/gpt-oss-120b",
-  "llama-3.1-8b-instant",
 ].filter(Boolean);
 
 const TARGETS = {
@@ -85,7 +90,7 @@ const TOPICS = {
   ],
 };
 
-const CHUNK = 50; // words per API call
+const CHUNK = 40; // words per API call (keeps requests under free-tier TPM limits)
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -106,19 +111,30 @@ Rules:
         body: JSON.stringify({
           model,
           temperature: 0.8,
-          max_tokens: 6000,
+          max_completion_tokens: 4096,
           messages: [{ role: "user", content: prompt }],
         }),
       });
-      if (!res.ok) continue;
+      if (!res.ok) {
+        const txt = await res.text();
+        const wait = txt.match(/try again in ([\d.]+)s/i);
+        console.log(`    [${model}] ${res.status}${wait ? ` — waiting ${Math.ceil(Number(wait[1]))}s` : ""}: ${txt.slice(0, 120)}`);
+        if (res.status === 429 && wait) await sleep(Math.ceil(Number(wait[1])) * 1000 + 500);
+        continue;
+      }
       const data = await res.json();
-      const content = data.choices?.[0]?.message?.content ?? "";
+      const msg = data.choices?.[0]?.message;
+      const content = msg?.content ?? "";
+      const finish = data.choices?.[0]?.finish_reason;
       const match = content.match(/\[[\s\S]*\]/);
-      if (!match) continue;
+      if (!match) {
+        console.log(`    [${model}] unparseable output (finish=${finish}, len=${content.length})`);
+        continue;
+      }
       const arr = JSON.parse(match[0]);
       if (Array.isArray(arr) && arr.length > 0) return arr;
-    } catch {
-      /* try next model */
+    } catch (e) {
+      console.log(`    [${model}] error: ${String(e).slice(0, 120)}`);
     }
   }
   return null;

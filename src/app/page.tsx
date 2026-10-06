@@ -71,7 +71,7 @@ export default function Home() {
           {[
             { icon: "🗣️", title: "Anna — 55 Scenarios", desc: "Real-life situations: café, airport, hotel, job interview, bargaining, emergencies. Gentle real-time corrections while you speak." },
             { icon: "👨‍🏫", title: "Lehrer — Teach me a topic", desc: "YOU choose the topic — 'der-die-das', job interview, travel. Lehrer teaches natively and gives detailed feedback." },
-            { icon: "🎭", title: "6 Avatar partners", desc: "Anna, Markus, Lena, Raj, Sophie, Jonas — each with their own voice. Pick who you vibe with." },
+            { icon: "📇", title: "4,500+ Flashcards", desc: "A1 (1,000) • A2 (1,500) • B1 (2,000) words with 3D flip cards, audio and spaced repetition — words come back right before you forget them." },
             { icon: "📝", title: "Feedback Report", desc: "After every session: your score, mistakes, new vocabulary and a plan for the next step." },
           ].map((f) => (
             <div key={f.title} className="glass rounded-2xl p-6 hover:scale-[1.02] transition-transform">
@@ -132,7 +132,7 @@ export default function Home() {
             <ul className="space-y-2 text-sm opacity-85 mb-8">
               <li>✅ Both avatars — Anna &amp; Lehrer</li>
               <li>✅ Voice conversations (daily limit)</li>
-              <li>✅ A1–A2 curriculum</li>
+              <li>✅ A1–A2 curriculum + 4,500-word flashcard trainer</li>
               <li>✅ Basic feedback</li>
             </ul>
             <Link href="/practice" className="btn-ghost block text-center">Start now — free</Link>

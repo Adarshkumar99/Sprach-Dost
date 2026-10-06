@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { speak, loadVoices } from "@/lib/speech";
+import { speakSmart, loadVoices } from "@/lib/speech";
 import { vocabId, type VocabWord } from "@/lib/vocab";
 import { loadAllWords, topicsOfLevel, wordsForLevel } from "@/lib/vocabStore";
 import { gradeCard, fullStats, dueCards, isNew } from "@/lib/srs";
@@ -29,8 +29,10 @@ export default function VocabPage() {
   const [flipped, setFlipped] = useState(false);
   const [gradedCount, setGradedCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [slow, setSlow] = useState(false);
 
   const startRef = useRef<number>(0);
+  const touchX = useRef<number | null>(null);
 
   /* load words + topics + stats */
   useEffect(() => {
@@ -97,8 +99,20 @@ export default function VocabPage() {
   }, [deck, idx, correctCount, level]);
 
   const playAudio = useCallback((text: string) => {
-    speak(text, "de-DE", { genderHint: "anna", rate: 0.9 });
+    speakSmart(text, "de-DE", { genderHint: "anna", rate: slow ? 0.65 : 0.9 });
+  }, [slow]);
+
+  /* swipe gestures: right = Good, left = Again (mobile-friendly grading) */
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchX.current = e.touches[0].clientX;
   }, []);
+  const onTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (touchX.current === null || !flipped) { touchX.current = null; return; }
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    touchX.current = null;
+    if (Math.abs(dx) < 60) return; // too short — treat as tap
+    grade(dx > 0 ? 4 : 1); // right = knew it, left = forgot
+  }, [flipped, grade]);
 
   const card = deck[idx];
 
@@ -138,13 +152,19 @@ export default function VocabPage() {
           <div className="h-full german-gradient rounded-full transition-all" style={{ width: `${(idx / deck.length) * 100}%` }} />
         </div>
 
-        {/* flip card */}
-        <button
-          onClick={() => setFlipped((f) => !f)}
-          className="glass rounded-3xl w-full min-h-[300px] flex flex-col items-center justify-center gap-4 p-8 hover:scale-[1.01] transition-all"
+        {/* 3D flip card */}
+        <div
+          className="flip-scene w-full"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
         >
-          {!flipped ? (
-            <>
+          <button
+            onClick={() => setFlipped((f) => !f)}
+            aria-label="Flip card"
+            className={`flip-card ${flipped ? "flipped" : ""} w-full min-h-[300px] hover:scale-[1.01] transition-transform`}
+          >
+            {/* front — German */}
+            <div className="flip-face glass rounded-3xl flex flex-col items-center justify-center gap-4 p-8">
               <span className="text-xs tracking-widest opacity-50">GERMAN</span>
               <span className="text-3xl md:text-4xl font-extrabold text-amber-300 text-center">{card.de}</span>
               <span
@@ -155,10 +175,10 @@ export default function VocabPage() {
               >
                 🔊 Hear it
               </span>
-              <span className="text-xs opacity-50 mt-4">Tap card to flip ↻</span>
-            </>
-          ) : (
-            <>
+              <span className="text-xs opacity-50 mt-4">Tap to flip ↻ • swipe ⇄ to grade</span>
+            </div>
+            {/* back — meaning */}
+            <div className="flip-face flip-back glass rounded-3xl flex flex-col items-center justify-center gap-4 p-8 border-emerald-400/30">
               <span className="text-xs tracking-widest opacity-50">MEANING</span>
               <span className="text-2xl font-bold text-emerald-300 text-center">{card.en}</span>
               {card.ex && (
@@ -174,8 +194,19 @@ export default function VocabPage() {
                   </span>
                 </div>
               )}
-            </>
-          )}
+            </div>
+          </button>
+        </div>
+
+        {/* speed toggle */}
+        <button
+          onClick={() => setSlow((s) => !s)}
+          className={`mt-4 text-xs rounded-full px-4 py-2 transition-all ${
+            slow ? "german-gradient text-black font-bold" : "glass opacity-70 hover:opacity-100"
+          }`}
+          aria-pressed={slow}
+        >
+          {slow ? "🐢 Slow audio ON" : "🐇 Normal speed"}
         </button>
 
         {/* grade buttons */}
