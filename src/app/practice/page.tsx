@@ -1,11 +1,13 @@
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import ProgressCard from "@/components/ProgressCard";
+import AuthButton from "@/components/AuthButton";
 
 export default function Practice() {
   return (
     <main className="flex flex-col min-h-screen items-center justify-center px-6 py-14">
       <Link href="/" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100">← Home</Link>
+      <div className="absolute top-6 right-6"><AuthButton /></div>
 
       <h1 className="text-3xl md:text-5xl font-extrabold text-center mb-3">
         Who do you want to practice with? 🤔
@@ -53,9 +55,25 @@ export default function Practice() {
             <p className="text-sm opacity-70">
               A1 (1,000) • A2 (1,500) • B1 (2,000) words with meanings & example sentences.
               Cards come back right before you forget them — that&apos;s how they stick. 🔊 Audio for every word.
+              Continue where you left off — progress saves after every card.
             </p>
           </div>
           <span className="btn-primary text-sm whitespace-nowrap">Start training →</span>
+        </Link>
+
+        <Link
+          href="/grammar"
+          className="md:col-span-2 glass rounded-3xl p-8 flex flex-col sm:flex-row items-center gap-6 hover:scale-[1.01] hover:border-blue-400/50 transition-all"
+        >
+          <div className="text-6xl">📐</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-xl mb-1">Grammar Lessons — Goethe Syllabus A1•A2•B1</div>
+            <p className="text-sm opacity-70">
+              Every grammar topic from der/die/das to Konjunktiv II — short lesson in simple English,
+              then a hand-checked quiz. <b>1,000+ questions</b> with instant explanations.
+            </p>
+          </div>
+          <span className="btn-primary text-sm whitespace-nowrap">Start learning →</span>
         </Link>
       </div>
 

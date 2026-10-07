@@ -5,13 +5,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { speakSmart, loadVoices } from "@/lib/speech";
 import { vocabId, type VocabWord } from "@/lib/vocab";
 import { loadAllWords, topicsOfLevel, wordsForLevel } from "@/lib/vocabStore";
-import { gradeCard, fullStats, dueCards, isNew } from "@/lib/srs";
+import { gradeCard, fullStats, dueCards, isNew, getDeckOrder, saveDeckOrder, clearDeckOrder } from "@/lib/srs";
 import { recordSession } from "@/lib/progress";
 
 type Phase = "setup" | "session" | "done";
 type Mode = "learn" | "review";
 const LEVELS = ["A1", "A2", "B1"] as const;
-const LEVEL_COLORS: Record<string, string> = { A1: "lvl-a1", A2: "lvl-a2", B1: "lvl-b1" };
 
 export default function VocabPage() {
   /* setup state */
@@ -53,25 +52,62 @@ export default function VocabPage() {
     };
   }, [level]);
 
-  const startSession = useCallback(async (m: Mode) => {
+  const scope = `${level}|${topic}`;
+
+  /* saved deck for "Continue where you left off" */
+  const [savedCount, setSavedCount] = useState(0);
+  useEffect(() => {
+    (async () => {
+      const saved = getDeckOrder(scope);
+      if (!saved) { setSavedCount(0); return; }
+      const pool = await wordsForLevel(level, topic);
+      const freshIds = new Set(pool.filter((w) => isNew(vocabId(w))).map(vocabId));
+      setSavedCount(saved.filter((id) => freshIds.has(id)).length);
+    })();
+  }, [scope, level, topic, phase]);
+
+  const startLearn = useCallback(async (restart: boolean) => {
     loadVoices(); // pre-warm voices on the click gesture
     const pool = await wordsForLevel(level, topic);
-    let cards: VocabWord[];
-    if (m === "review") {
-      const dueIds = dueCards(pool.map(vocabId));
-      cards = pool.filter((w) => dueIds.includes(vocabId(w)));
-      if (cards.length === 0) {
-        alert("No cards are due right now 🎉 — learn new words instead, or come back later!");
-        return;
-      }
-    } else {
-      // learn: fresh (unlearned) cards first
-      const fresh = pool.filter((w) => isNew(vocabId(w)));
-      cards = (fresh.length ? fresh : pool).slice(0, 10);
+    const fresh = pool.filter((w) => isNew(vocabId(w)));
+    const freshIds = new Set(fresh.map(vocabId));
+
+    if (restart) clearDeckOrder(scope);
+    const saved = getDeckOrder(scope);
+    let ids = saved ? saved.filter((id) => freshIds.has(id)) : [];
+    if (ids.length === 0) {
+      // build a NEW shuffled deck of all new words and persist it
+      ids = [...freshIds].sort(() => Math.random() - 0.5);
+      saveDeckOrder(scope, ids);
     }
-    // shuffle lightly
+
+    const byId = new Map(pool.map((w) => [vocabId(w), w]));
+    const cards = ids.map((id) => byId.get(id)).filter((w): w is VocabWord => !!w);
+    if (cards.length === 0) {
+      alert("You've learned all words in this selection 🎉 — try Review mode or another topic!");
+      return;
+    }
+    setMode("learn");
+    setDeck(cards);
+    setIdx(0);
+    setFlipped(false);
+    setGradedCount(0);
+    setCorrectCount(0);
+    startRef.current = Date.now();
+    setPhase("session");
+  }, [level, topic, scope]);
+
+  const startReview = useCallback(async () => {
+    loadVoices();
+    const pool = await wordsForLevel(level, topic);
+    const dueIds = dueCards(pool.map(vocabId));
+    let cards = pool.filter((w) => dueIds.includes(vocabId(w)));
+    if (cards.length === 0) {
+      alert("No cards are due right now 🎉 — learn new words instead, or come back later!");
+      return;
+    }
     cards = [...cards].sort(() => Math.random() - 0.5);
-    setMode(m);
+    setMode("review");
     setDeck(cards);
     setIdx(0);
     setFlipped(false);
@@ -91,12 +127,13 @@ export default function VocabPage() {
     if (done) {
       const minutes = Math.max(1, Math.round((Date.now() - startRef.current) / 60000));
       recordSession({ minutes, words: correctCount + (g >= 3 ? 1 : 0), level });
+      clearDeckOrder(scope); // deck finished — next time builds from remaining new words
       setPhase("done");
     } else {
       setIdx((i) => i + 1);
       setFlipped(false);
     }
-  }, [deck, idx, correctCount, level]);
+  }, [deck, idx, correctCount, level, scope]);
 
   const playAudio = useCallback((text: string) => {
     speakSmart(text, "de-DE", { genderHint: "anna", rate: slow ? 0.65 : 0.9 });
@@ -281,15 +318,29 @@ export default function VocabPage() {
 
       {/* mode buttons */}
       <div className="flex gap-3 w-full">
-        <button onClick={() => startSession("learn")} className="btn-primary flex-1 !py-4">
-          📚 Learn new (10 cards)
-        </button>
-        <button onClick={() => startSession("review")} className="btn-ghost flex-1 !py-4">
+        {savedCount > 0 ? (
+          <button onClick={() => startLearn(false)} className="btn-primary flex-1 !py-4">
+            ▶️ Continue ({savedCount} words left)
+          </button>
+        ) : (
+          <button onClick={() => startLearn(false)} className="btn-primary flex-1 !py-4">
+            📚 Learn new words ({stats.new})
+          </button>
+        )}
+        <button onClick={startReview} className="btn-ghost flex-1 !py-4">
           🔁 Review due ({stats.due})
         </button>
       </div>
+      {savedCount > 0 && (
+        <button
+          onClick={() => startLearn(true)}
+          className="mt-3 text-sm opacity-60 hover:opacity-100 underline underline-offset-2"
+        >
+          🔄 Start from the beginning (reshuffle)
+        </button>
+      )}
       <p className="text-xs opacity-50 mt-4 text-center">
-        Tip: 10 new words daily + reviews = &gt;2,000-word vocabulary in a few months 🚀
+        Your progress saves automatically after every card — quit anytime, continue anytime.
       </p>
     </main>
   );

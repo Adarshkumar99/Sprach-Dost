@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import WaitlistForm from "@/components/WaitlistForm";
+import AuthButton from "@/components/AuthButton";
 
 export default function Home() {
   return (
@@ -15,12 +16,15 @@ export default function Home() {
           <Link href="/practice/anna" className="hover:text-amber-400 transition-colors">Anna 🗣️</Link>
           <Link href="/practice/lehrer" className="hover:text-amber-400 transition-colors">Lehrer 👨‍🏫</Link>
           <Link href="/vocab" className="hover:text-amber-400 transition-colors">Vocab 📇</Link>
-          <a href="#levels" className="hover:text-amber-400 transition-colors">A1–C2</a>
+          <Link href="/grammar" className="hover:text-amber-400 transition-colors">Grammar 📐</Link>
           <a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing</a>
         </div>
-        <Link href="/practice" className="btn-primary !py-2 !px-5 text-sm">
-          Start Free
-        </Link>
+        <div className="flex items-center gap-3">
+          <AuthButton />
+          <Link href="/practice" className="btn-primary !py-2 !px-5 text-sm">
+            Start Free
+          </Link>
+        </div>
       </nav>
 
       {/* HERO */}
@@ -72,6 +76,7 @@ export default function Home() {
             { icon: "🗣️", title: "Anna — 55 Scenarios", desc: "Real-life situations: café, airport, hotel, job interview, bargaining, emergencies. Gentle real-time corrections while you speak." },
             { icon: "👨‍🏫", title: "Lehrer — Teach me a topic", desc: "YOU choose the topic — 'der-die-das', job interview, travel. Lehrer teaches natively and gives detailed feedback." },
             { icon: "📇", title: "4,500+ Flashcards", desc: "A1 (1,000) • A2 (1,500) • B1 (2,000) words with 3D flip cards, audio and spaced repetition — words come back right before you forget them." },
+            { icon: "📐", title: "Grammar — 1,000+ Questions", desc: "The complete Goethe syllabus A1, A2 and B1: short English lessons, declension tables, then quizzes with instant explanations." },
             { icon: "📝", title: "Feedback Report", desc: "After every session: your score, mistakes, new vocabulary and a plan for the next step." },
           ].map((f) => (
             <div key={f.title} className="glass rounded-2xl p-6 hover:scale-[1.02] transition-transform">

@@ -26,8 +26,20 @@ Most German learners in India complete months of coaching yet freeze when they h
 
 ### Vocabulary Trainer
 - **4,500+ words**: A1 (1,000) • A2 (1,500) • B1 (2,000), each with meaning, example sentence and 🔊 audio
+- Continuous deck — no artificial batching. Progress saves after every card; continue where you left off or reshuffle anytime
 - 3D flip flashcards with swipe-to-grade gestures, slow/normal audio toggle
 - Spaced repetition engine (SM-2 style): cards resurface right before you forget them
+
+### Grammar Lessons
+- **Complete Goethe syllabus**: 30 topics per level (A1/A2/B1) — from der/die/das to Konjunktiv II
+- **1,080 quiz questions** (MCQ) with instant right/wrong + a one-line explanation for every answer
+- Lessons written in simple English with German examples and declension tables
+
+### Accounts & Sync (optional)
+- Email/password + Google login via Supabase (free tier)
+- Logged-in users: vocab progress, SRS state, grammar scores and streak sync across devices
+- Guests still get full local persistence on their device — no forced login
+- Setup: copy `.env.local.example`, add `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, run `supabase/schema.sql` once in the SQL Editor
 
 ### Feedback Reports
 - End-of-session report: score, strengths, mistakes with corrections, vocabulary learned, and next steps
@@ -79,8 +91,9 @@ GROQ_API_KEY=your_key_here
 - [x] Local progress tracking (sessions, streak, words learned)
 - [x] PWA manifest (installable on phones)
 - [x] Optional neural voice layer with free fallback
-- [x] 4,500+ word flashcard trainer (A1/A2/B1) with 3D flip + spaced repetition
-- [ ] Auth + cloud progress sync (Supabase)
+- [x] 4,500+ word flashcard trainer (A1/A2/B1) with 3D flip + spaced repetition + resume
+- [x] Grammar lessons — full Goethe A1/A2/B1 syllabus with 1,080 quiz questions
+- [x] Auth + cloud progress sync (Supabase, optional — app works offline too)
 - [ ] Quiz mode (4-choice) on flashcards + word-of-the-day push
 - [ ] Play Store wrapper (Capacitor)
 - [ ] Pro tier (unlimited sessions, pronunciation scoring)

@@ -1,7 +1,10 @@
 /**
  * Spaced repetition engine — SM-2 algorithm (same family as Anki).
  * Stores per-word review state in localStorage: ease, interval, repetitions, due date.
+ * Syncs to the cloud automatically when the user is logged in.
  */
+
+import { pushProgressToCloud } from "./supabase";
 
 export type CardState = {
   ease: number;      // easiness factor (default 2.5)
@@ -27,6 +30,7 @@ function load(): Store {
 
 function save(s: Store) {
   localStorage.setItem(KEY, JSON.stringify(s));
+  pushProgressToCloud();
 }
 
 export function getCardState(id: string): CardState {
@@ -74,6 +78,41 @@ export function dueCards(ids: string[]): string[] {
 export function learnedCount(ids: string[]): number {
   const store = load();
   return ids.filter((id) => store[id] && store[id].reps > 0).length;
+}
+
+/* ── Deck order persistence (resume where you left off) ── */
+
+const ORDER_KEY = "sprachdost_deck_order";
+
+type OrderStore = Record<string, { order: string[]; updated: number }>;
+
+function loadOrders(): OrderStore {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(localStorage.getItem(ORDER_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+/** scope identifies a deck, e.g. "A1|All" or "B1|Travel" */
+export function getDeckOrder(scope: string): string[] | null {
+  const entry = loadOrders()[scope];
+  return entry?.order?.length ? entry.order : null;
+}
+
+export function saveDeckOrder(scope: string, order: string[]) {
+  const store = loadOrders();
+  store[scope] = { order, updated: Date.now() };
+  localStorage.setItem(ORDER_KEY, JSON.stringify(store));
+  pushProgressToCloud();
+}
+
+export function clearDeckOrder(scope: string) {
+  const store = loadOrders();
+  delete store[scope];
+  localStorage.setItem(ORDER_KEY, JSON.stringify(store));
+  pushProgressToCloud();
 }
 
 export function fullStats(ids: string[]): { learned: number; due: number; new: number } {

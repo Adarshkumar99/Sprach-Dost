@@ -1,7 +1,9 @@
 /**
  * Local progress store (streaks, sessions, vocab) — works offline with zero setup.
- * Structure is Supabase-ready: same shape can be synced to a backend later.
+ * Syncs to Supabase automatically when the user is logged in.
  */
+
+import { pushProgressToCloud } from "./supabase";
 
 export type ProgressData = {
   sessions: number;
@@ -59,6 +61,7 @@ export function recordSession(opts: { minutes?: number; words?: number; level?: 
   }
   p.lastDay = t;
   localStorage.setItem(KEY, JSON.stringify(p));
+  pushProgressToCloud();
 }
 
 /** approximate how many vocab items are listed in a feedback "vocab" line */
