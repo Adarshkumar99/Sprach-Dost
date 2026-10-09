@@ -12,10 +12,11 @@ type GrammarTopic = { id: string; title: string; lesson: string; questions: Gram
 type View =
   | { name: "levels" }
   | { name: "lesson"; topic: GrammarTopic }
-  | { name: "quiz"; topic: GrammarTopic }
-  | { name: "done"; topic: GrammarTopic; correct: number };
+  | { name: "quiz"; topic: GrammarTopic; set: GrammarQuestion[] }
+  | { name: "done"; topic: GrammarTopic; set: GrammarQuestion[]; correct: number };
 
 const LEVELS = ["A1", "A2", "B1"] as const;
+const QUIZ_SIZE = 20; // questions sampled per attempt from the topic's pool
 
 /* ───────── score storage (cloud sync comes with auth) ───────── */
 const SCORE_KEY = "sprachdost_grammar_scores";
@@ -71,23 +72,28 @@ export default function GrammarPage() {
 
   const startQuiz = useCallback((topic: GrammarTopic) => {
     loadVoices();
-    setView({ name: "quiz", topic });
+    // sample a fresh random set every attempt — with a 300-question pool,
+    // each quiz feels different
+    const set = [...topic.questions]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, Math.min(QUIZ_SIZE, topic.questions.length));
+    setView({ name: "quiz", topic, set });
     setQIdx(0);
     setPicked(null);
     setCorrectCount(0);
   }, []);
 
-  const pick = useCallback((i: number, topic: GrammarTopic) => {
+  const pick = useCallback((i: number, set: GrammarQuestion[]) => {
     if (picked !== null) return;
     setPicked(i);
-    if (i === topic.questions[qIdx].answer) setCorrectCount((c) => c + 1);
+    if (i === set[qIdx].answer) setCorrectCount((c) => c + 1);
   }, [picked, qIdx]);
 
-  const next = useCallback((topic: GrammarTopic, correct: number) => {
-    if (qIdx + 1 >= topic.questions.length) {
-      saveScore(level, topic.id, correct, topic.questions.length);
+  const next = useCallback((topic: GrammarTopic, set: GrammarQuestion[], correct: number) => {
+    if (qIdx + 1 >= set.length) {
+      saveScore(level, topic.id, correct, set.length);
       setScores(loadScores());
-      setView({ name: "done", topic, correct });
+      setView({ name: "done", topic, set, correct });
     } else {
       setQIdx((i) => i + 1);
       setPicked(null);
@@ -102,8 +108,8 @@ export default function GrammarPage() {
   /* ═══════════ VIEWS ═══════════ */
 
   if (view.name === "done") {
-    const { topic, correct } = view;
-    const total = topic.questions.length;
+    const { topic, correct, set } = view;
+    const total = set.length;
     const pct = Math.round((correct / total) * 100);
     return (
       <main className="min-h-screen flex flex-col items-center justify-center px-6 max-w-2xl mx-auto w-full text-center">
@@ -125,18 +131,18 @@ export default function GrammarPage() {
   }
 
   if (view.name === "quiz") {
-    const { topic } = view;
-    const q = topic.questions[qIdx];
+    const { topic, set } = view;
+    const q = set[qIdx];
     const isRight = picked === q.answer;
     return (
       <main className="min-h-screen flex flex-col items-center px-6 py-10 max-w-2xl mx-auto w-full">
         <div className="w-full flex items-center justify-between mb-6">
           <button onClick={() => setView({ name: "lesson", topic })} className="text-sm opacity-70 hover:opacity-100">← Quit</button>
-          <div className="text-sm opacity-70">{qIdx + 1} / {topic.questions.length}</div>
+          <div className="text-sm opacity-70">{qIdx + 1} / {set.length}</div>
           <div className="text-xs px-2 py-1 rounded-full bg-white/10">{level} • {topic.title.split("(")[0].trim()}</div>
         </div>
         <div className="w-full h-1.5 bg-white/10 rounded-full mb-8 overflow-hidden">
-          <div className="h-full german-gradient rounded-full transition-all" style={{ width: `${(qIdx / topic.questions.length) * 100}%` }} />
+          <div className="h-full german-gradient rounded-full transition-all" style={{ width: `${(qIdx / set.length) * 100}%` }} />
         </div>
 
         <div className="glass rounded-3xl w-full p-6 md:p-8">
@@ -160,7 +166,7 @@ export default function GrammarPage() {
               return (
                 <button
                   key={i}
-                  onClick={() => pick(i, topic)}
+                  onClick={() => pick(i, set)}
                   disabled={picked !== null}
                   className={`rounded-xl border border-white/10 px-4 py-3 text-left font-semibold transition-all ${cls}`}
                 >
@@ -177,8 +183,8 @@ export default function GrammarPage() {
               <div className={`rounded-xl px-4 py-3 text-sm ${isRight ? "bg-emerald-500/10 border border-emerald-400/40" : "bg-red-500/10 border border-red-400/40"}`}>
                 <b>{isRight ? "Richtig! 🎉 " : "Not quite. "}</b>{q.why}
               </div>
-              <button onClick={() => next(topic, correctCount)} className="btn-primary w-full mt-4 !py-3">
-                {qIdx + 1 >= topic.questions.length ? "See result →" : "Next question →"}
+              <button onClick={() => next(topic, set, correctCount)} className="btn-primary w-full mt-4 !py-3">
+                {qIdx + 1 >= set.length ? "See result →" : "Next question →"}
               </button>
             </div>
           )}
@@ -207,8 +213,11 @@ export default function GrammarPage() {
           <p className="whitespace-pre-wrap leading-relaxed text-[15px]">{topic.lesson}</p>
         </div>
         <button onClick={() => startQuiz(topic)} className="btn-primary !py-4 !px-8 w-full md:w-auto">
-          📝 Practice: {topic.questions.length} questions →
+          📝 Practice: {Math.min(QUIZ_SIZE, topic.questions.length)} random questions →
         </button>
+        <p className="text-xs opacity-50 mt-3">
+          Question pool: {topic.questions.length} — every attempt draws a fresh random set.
+        </p>
       </main>
     );
   }

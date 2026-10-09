@@ -32,8 +32,12 @@ Most German learners in India complete months of coaching yet freeze when they h
 
 ### Grammar Lessons
 - **Complete Goethe syllabus**: 30 topics per level (A1/A2/B1) — from der/die/das to Konjunktiv II
-- **1,080 quiz questions** (MCQ) with instant right/wrong + a one-line explanation for every answer
+- **Deep question banks** (target 300/topic → 27,000 total, generated incrementally — safe to re-run `npm run gen:grammar` to top up); each quiz samples 20 at random so every attempt is fresh
+- Instant right/wrong + a one-line explanation for every answer
 - Lessons written in simple English with German examples and declension tables
+
+### Placement Test
+- **45 tap-to-answer questions** (A1 → A2 → B1, rising difficulty) that recommend your starting level in ~5 minutes, no typing
 
 ### Accounts & Sync (optional)
 - Email/password + Google login via Supabase (free tier)
@@ -92,7 +96,8 @@ GROQ_API_KEY=your_key_here
 - [x] PWA manifest (installable on phones)
 - [x] Optional neural voice layer with free fallback
 - [x] 4,500+ word flashcard trainer (A1/A2/B1) with 3D flip + spaced repetition + resume
-- [x] Grammar lessons — full Goethe A1/A2/B1 syllabus with 1,080 quiz questions
+- [x] Grammar lessons — full Goethe A1/A2/B1 syllabus with deep question banks (300/topic target, ~20 sampled per quiz)
+- [x] Vocab quiz mode (MCQ, feeds spaced repetition) + 45-question placement test
 - [x] Auth + cloud progress sync (Supabase, optional — app works offline too)
 - [ ] Quiz mode (4-choice) on flashcards + word-of-the-day push
 - [ ] Play Store wrapper (Capacitor)

@@ -31,10 +31,10 @@ export default function Home() {
       <section className="flex flex-col-reverse md:flex-row items-center justify-between gap-10 px-6 md:px-12 xl:px-24 py-14 md:py-24">
         <div className="max-w-xl text-center md:text-left">
           <div className="inline-block glass rounded-full px-4 py-1 text-xs font-semibold mb-5 tracking-wider">
-            100% FREE to start • Made in India 🇮🇳
+            100% FREE to start • No card needed
           </div>
           <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">
-            India will speak <span className="german-gradient bg-clip-text text-transparent">German</span> 🇩🇪
+            Your German speaking partner — <span className="german-gradient bg-clip-text text-transparent">anytime, anywhere.</span>
           </h1>
           <p className="mt-5 text-lg opacity-80 leading-relaxed">
             Talk with Anna, learn from Lehrer — German speaking practice from <b>A1 to C2</b> with
@@ -68,8 +68,8 @@ export default function Home() {
           You learn by <span className="text-amber-400">speaking</span>
         </h2>
         <p className="text-center opacity-70 max-w-2xl mx-auto mb-12">
-          Even after spending ₹20,000 on coaching, you rarely get real speaking practice.
-          On SprachDost, the avatar actually talks to you in German — and explains in simple English.
+          Most courses make you cram grammar for months. SprachDost puts you in real voice
+          conversations from day one — the avatar talks to you in German and explains in simple English.
         </p>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
           {[
@@ -78,6 +78,7 @@ export default function Home() {
             { icon: "📇", title: "4,500+ Flashcards", desc: "A1 (1,000) • A2 (1,500) • B1 (2,000) words with 3D flip cards, audio and spaced repetition — words come back right before you forget them." },
             { icon: "📐", title: "Grammar — 1,000+ Questions", desc: "The complete Goethe syllabus A1, A2 and B1: short English lessons, declension tables, then quizzes with instant explanations." },
             { icon: "📝", title: "Feedback Report", desc: "After every session: your score, mistakes, new vocabulary and a plan for the next step." },
+            { icon: "🧭", title: "Placement Test", desc: "45 quick questions and we pinpoint your level (A1–B1) — so you start exactly where you should, not from zero." },
           ].map((f) => (
             <div key={f.title} className="glass rounded-2xl p-6 hover:scale-[1.02] transition-transform">
               <div className="text-4xl mb-3">{f.icon}</div>
@@ -169,9 +170,9 @@ export default function Home() {
       <footer className="mt-auto border-t border-white/10 px-6 md:px-12 py-8 flex flex-col md:flex-row items-center justify-between gap-3 text-sm opacity-60">
         <div>
           <span className="text-amber-400 font-bold">Sprach</span>
-          <span className="text-red-500 font-bold">Dost</span> — India will speak German 🇮🇳
+          <span className="text-red-500 font-bold">Dost</span> — your German speaking partner
         </div>
-        <div>Built with ❤️ for Indian German learners • A1–C2 • Goethe ready</div>
+        <div>Built with ❤️ for German learners • A1–C2 • Goethe ready</div>
       </footer>
     </main>
   );

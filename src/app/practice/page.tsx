@@ -75,6 +75,20 @@ export default function Practice() {
           </div>
           <span className="btn-primary text-sm whitespace-nowrap">Start learning →</span>
         </Link>
+
+        <Link
+          href="/placement"
+          className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-purple-400/50 transition-all"
+        >
+          <div className="text-5xl">🧭</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-lg mb-1">Not sure of your level? — Placement Test</div>
+            <p className="text-sm opacity-70">
+              45 quick tap-to-answer questions (A1 → B1). ~5 minutes, no typing — we tell you exactly where to start.
+            </p>
+          </div>
+          <span className="btn-ghost text-sm whitespace-nowrap">Take the test →</span>
+        </Link>
       </div>
 
       <p className="mt-10 text-xs opacity-50 text-center max-w-md">

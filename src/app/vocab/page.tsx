@@ -9,8 +9,10 @@ import { gradeCard, fullStats, dueCards, isNew, getDeckOrder, saveDeckOrder, cle
 import { recordSession } from "@/lib/progress";
 
 type Phase = "setup" | "session" | "done";
-type Mode = "learn" | "review";
+type Mode = "learn" | "review" | "quiz";
+type QuizItem = { word: VocabWord; options: string[]; correctIndex: number };
 const LEVELS = ["A1", "A2", "B1"] as const;
+const QUIZ_LEN = 20;
 
 export default function VocabPage() {
   /* setup state */
@@ -24,10 +26,12 @@ export default function VocabPage() {
 
   /* session state */
   const [deck, setDeck] = useState<VocabWord[]>([]);
+  const [quizDeck, setQuizDeck] = useState<QuizItem[]>([]);
   const [idx, setIdx] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [gradedCount, setGradedCount] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
+  const [picked, setPicked] = useState<number | null>(null);
   const [slow, setSlow] = useState(false);
 
   const startRef = useRef<number>(0);
@@ -117,6 +121,55 @@ export default function VocabPage() {
     setPhase("session");
   }, [level, topic]);
 
+  /* MCQ quiz: German word → pick the English meaning. Feeds SRS (right=Good, wrong=Again). */
+  const startQuiz = useCallback(async () => {
+    loadVoices();
+    const pool = await wordsForLevel(level, topic);
+    const meanings = [...new Set(pool.map((w) => w.en))];
+    if (pool.length < 4 || meanings.length < 4) {
+      alert("Not enough words in this selection for a quiz — pick a bigger topic or 'All'.");
+      return;
+    }
+    const words = [...pool].sort(() => Math.random() - 0.5).slice(0, Math.min(QUIZ_LEN, pool.length));
+    const items: QuizItem[] = words.map((word) => {
+      const distract = meanings.filter((m) => m !== word.en);
+      const opts = [word.en, ...distract.sort(() => Math.random() - 0.5).slice(0, 3)];
+      const shuffled = opts.sort(() => Math.random() - 0.5);
+      return { word, options: shuffled, correctIndex: shuffled.indexOf(word.en) };
+    });
+    setMode("quiz");
+    setQuizDeck(items);
+    setIdx(0);
+    setPicked(null);
+    setGradedCount(0);
+    setCorrectCount(0);
+    startRef.current = Date.now();
+    setPhase("session");
+  }, [level, topic]);
+
+  const answerQuiz = useCallback((i: number) => {
+    if (picked !== null) return;
+    const item = quizDeck[idx];
+    if (!item) return;
+    setPicked(i);
+    const right = i === item.correctIndex;
+    gradeCard(vocabId(item.word), right ? 4 : 1); // quiz results feed spaced repetition
+    if (right) setCorrectCount((c) => c + 1);
+  }, [picked, quizDeck, idx]);
+
+  const nextQuiz = useCallback((pickedNow: number | null) => {
+    const right = pickedNow !== null && pickedNow === quizDeck[idx]?.correctIndex;
+    setGradedCount((c) => c + 1);
+    if (idx + 1 >= quizDeck.length) {
+      const minutes = Math.max(1, Math.round((Date.now() - startRef.current) / 60000));
+      recordSession({ minutes, words: correctCount + (right ? 1 : 0), level });
+      setPhase("done");
+    } else {
+      setIdx((i) => i + 1);
+      setPicked(null);
+    }
+  }, [idx, quizDeck, correctCount, level]);
+
   const grade = useCallback((g: number) => {
     const card = deck[idx];
     if (!card) return;
@@ -161,7 +214,7 @@ export default function VocabPage() {
       <main className="min-h-screen flex flex-col items-center justify-center px-6 max-w-2xl mx-auto w-full text-center">
         <div className="text-6xl mb-4">🎉</div>
         <h1 className="text-3xl font-extrabold mb-2">Session complete!</h1>
-        <p className="opacity-70 mb-8">Level {level} • {mode === "learn" ? "New words" : "Review"}</p>
+        <p className="opacity-70 mb-8">Level {level} • {mode === "learn" ? "New words" : mode === "review" ? "Review" : "Quiz"}</p>
         <div className="grid grid-cols-3 gap-3 w-full mb-8">
           <Stat label="Cards" value={String(gradedCount)} icon="🃏" />
           <Stat label="Knew them" value={String(correctCount)} icon="✅" />
@@ -171,6 +224,67 @@ export default function VocabPage() {
           <button onClick={() => setPhase("setup")} className="btn-primary !px-6 text-sm">📚 Another round</button>
           <Link href="/practice" className="btn-ghost text-sm">← Practice hub</Link>
         </div>
+      </main>
+    );
+  }
+
+  if (phase === "session" && mode === "quiz") {
+    const item = quizDeck[idx];
+    if (!item) return null;
+    return (
+      <main className="min-h-screen flex flex-col items-center px-6 py-10 max-w-2xl mx-auto w-full">
+        <div className="w-full flex items-center justify-between mb-6">
+          <button onClick={() => setPhase("setup")} className="text-sm opacity-70 hover:opacity-100">← Quit</button>
+          <div className="text-sm opacity-70">{idx + 1} / {quizDeck.length}</div>
+          <div className="text-xs px-2 py-1 rounded-full bg-white/10">🧠 Quiz</div>
+        </div>
+        <div className="w-full h-1.5 bg-white/10 rounded-full mb-8 overflow-hidden">
+          <div className="h-full german-gradient rounded-full transition-all" style={{ width: `${(idx / quizDeck.length) * 100}%` }} />
+        </div>
+
+        <div className="glass rounded-3xl w-full p-8">
+          <div className="text-center mb-8">
+            <span className="text-xs tracking-widest opacity-50 block mb-3">WHAT DOES THIS MEAN?</span>
+            <span className="text-3xl md:text-4xl font-extrabold text-amber-300">{item.word.de}</span>
+            <div
+              onClick={() => speakSmart(item.word.de, "de-DE", { genderHint: "anna", rate: slow ? 0.65 : 0.9 })}
+              className="inline-block mt-3 glass rounded-full px-4 py-1.5 text-xs hover:bg-white/10 cursor-pointer"
+              role="button" aria-label="Hear the word"
+            >🔊 Hear it</div>
+          </div>
+
+          <div className="grid gap-3">
+            {item.options.map((opt, i) => {
+              let cls = "glass hover:border-amber-400/50";
+              if (picked !== null) {
+                if (i === item.correctIndex) cls = "border-emerald-400/70 bg-emerald-500/15";
+                else if (i === picked) cls = "border-red-400/70 bg-red-500/15";
+                else cls = "opacity-40";
+              }
+              return (
+                <button
+                  key={i}
+                  onClick={() => answerQuiz(i)}
+                  disabled={picked !== null}
+                  className={`rounded-xl border border-white/10 px-4 py-3 text-left font-semibold transition-all ${cls}`}
+                >
+                  <span className="opacity-50 mr-2">{["A","B","C","D"][i]}.</span>{opt}
+                  {picked !== null && i === item.correctIndex && <span className="ml-2">✅</span>}
+                  {picked !== null && i === picked && i !== item.correctIndex && <span className="ml-2">❌</span>}
+                </button>
+              );
+            })}
+          </div>
+
+          {picked !== null && (
+            <button onClick={() => nextQuiz(picked)} className="btn-primary w-full mt-6 !py-3 bubble-in">
+              {idx + 1 >= quizDeck.length ? "See result →" : "Next →"}
+            </button>
+          )}
+        </div>
+        <p className="text-xs opacity-50 mt-6 text-center">
+          Right answers move the word forward in spaced repetition; wrong ones bring it back sooner.
+        </p>
       </main>
     );
   }
@@ -331,6 +445,9 @@ export default function VocabPage() {
           🔁 Review due ({stats.due})
         </button>
       </div>
+      <button onClick={startQuiz} className="btn-ghost w-full mt-3 !py-4 hover:border-purple-400/50">
+        🧠 Quiz me ({Math.min(QUIZ_LEN, totalWords || stats.new + stats.learned)} questions — {topic === "All" ? "all topics" : topic})
+      </button>
       {savedCount > 0 && (
         <button
           onClick={() => startLearn(true)}
