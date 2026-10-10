@@ -2,6 +2,7 @@ import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import WaitlistForm from "@/components/WaitlistForm";
 import AuthButton from "@/components/AuthButton";
+import WordSphere from "@/components/WordSphere";
 
 export default function Home() {
   return (
@@ -28,8 +29,16 @@ export default function Home() {
       </nav>
 
       {/* HERO */}
-      <section className="flex flex-col-reverse md:flex-row items-center justify-between gap-10 px-6 md:px-12 xl:px-24 py-14 md:py-24">
-        <div className="max-w-xl text-center md:text-left">
+      <section className="relative flex flex-col-reverse md:flex-row items-center justify-between gap-10 px-6 md:px-12 xl:px-24 py-14 md:py-24 overflow-hidden">
+        {/* 3D floating German word sphere — full-bleed backdrop */}
+        <WordSphere />
+        {/* readability veil: darkens the middle so the headline stays crisp */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 60% 55% at 50% 45%, rgba(11,16,32,0.88) 0%, rgba(11,16,32,0.45) 55%, rgba(11,16,32,0.15) 100%)" }}
+        />
+        <div className="relative max-w-xl text-center md:text-left">
           <div className="inline-block glass rounded-full px-4 py-1 text-xs font-semibold mb-5 tracking-wider">
             100% FREE to start • No card needed
           </div>
@@ -53,7 +62,7 @@ export default function Home() {
             Best in Chrome / Edge • Microphone permission needed • No signup, no card
           </p>
         </div>
-        <div className="glass rounded-3xl p-8 flex gap-6">
+        <div className="relative glass rounded-3xl p-8 flex gap-6">
           <Avatar variant="anna" size={180} name="Anna" statusText="Conversation Partner" />
           <div className="hidden sm:block border-l border-white/10" />
           <div className="hidden sm:flex flex-col justify-center">
