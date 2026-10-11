@@ -2,81 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-/**
- * HeroGlobe — Lingo-style rotating globe for the SprachDost hero.
- * Pure Canvas 2D (zero deps): ~700 particle dots + lat/long wireframe,
- * amber/gold on-brand palette, halo glow + ground shadow, mouse parallax.
- * Glass speech bubbles orbit it with rotating German words (slang + umlaut sets).
- */
-
-/* words rotate through bubbles: slang first, umlaut mixed in */
-const BUBBLE_WORDS: { w: string; c: string }[] = [
-  { w: "Hallo!", c: "HELLO" },
-  { w: "Ach so!", c: "I SEE" },
-  { w: "Egal.", c: "WHATEVER" },
-  { w: "Genau!", c: "EXACTLY" },
-  { w: "schön", c: "BEAUTIFUL" },
-  { w: "über", c: "ABOUT / OVER" },
-  { w: "müsste", c: "WOULD HAVE TO" },
-  { w: "Straße", c: "STREET" },
-  { w: "Na klar", c: "OF COURSE" },
-  { w: "Wunderbar", c: "WONDERFUL" },
-  { w: "Doch!", c: "YES, ACTUALLY" },
-  { w: "groß", c: "BIG" },
-];
-
-const BUBBLE_POS = [
-  { left: "2%", top: "12%" },    // rim pe globe
-  { right: "6%", top: "20%" },
-  { left: "4%", bottom: "22%" },
-  { right: "6%", bottom: "26%" }, // up on the rim — not floating away
-] as const;
-
 /* words glued onto the globe surface — they rotate/tilt with the globe */
 const SURFACE_WORDS = ["schön", "Genau!", "über", "Servus", "müsste", "heiß", "Spaß", "Egal."];
-
-function Bubble({ index, reduced }: { index: number; reduced: boolean }) {
-  const [wi, setWi] = useState(index); // stagger start across the pool
-  const [out, setOut] = useState(false);
-
-  /* cycle this bubble through the word pool, staggered per bubble */
-  useEffect(() => {
-    if (reduced) return;
-    const t = setInterval(() => {
-      setOut(true);
-      setTimeout(() => {
-        setWi((v) => (v + BUBBLE_POS.length) % BUBBLE_WORDS.length);
-        setOut(false);
-      }, 380);
-    }, 5200 + index * 1400);
-    return () => clearInterval(t);
-  }, [index, reduced]);
-
-  const word = BUBBLE_WORDS[wi];
-  return (
-    <div
-      className={`absolute glass rounded-2xl px-4 py-2.5 shadow-xl bubble-float ${
-        index >= 2 ? "hidden sm:block" : ""
-      }`}
-      style={{
-        ...BUBBLE_POS[index],
-        animationDelay: `${index * 0.6}s`,
-        opacity: out ? 0 : 1,
-        transform: out ? "scale(0.9) translateY(6px)" : undefined,
-        transition: "opacity .35s ease, transform .35s ease",
-      }}
-    >
-      <div className="font-extrabold text-amber-300 text-base md:text-lg leading-tight">{word.w}</div>
-      <div className="text-[10px] tracking-[0.2em] opacity-60 font-semibold">{word.c} · GERMAN</div>
-      {/* caret pointing toward the globe */}
-      <span
-        aria-hidden="true"
-        className={`bubble-caret ${index < 2 ? "caret-down" : "caret-up"}`}
-        style={{ display: "block" }}
-      />
-    </div>
-  );
-}
 
 export default function HeroGlobe() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -298,10 +225,7 @@ export default function HeroGlobe() {
           {w}
         </span>
       ))}
-      {/* orbiting speech bubbles */}
-      {BUBBLE_POS.map((_, i) => (
-        <Bubble key={i} index={i} reduced={reduced} />
-      ))}
+      {/* flying words */}
       {/* sparkles */}
       <span aria-hidden="true" className="twinkle absolute text-amber-300/70 text-2xl" style={{ left: "10%", top: "28%" }}>✦</span>
       <span aria-hidden="true" className="twinkle absolute text-amber-300/60 text-xl hidden sm:inline" style={{ right: "8%", top: "6%", animationDelay: "1.2s" }}>✦</span>
