@@ -26,11 +26,14 @@ const BUBBLE_WORDS: { w: string; c: string }[] = [
 ];
 
 const BUBBLE_POS = [
-  { left: "2%", top: "6%" },
-  { right: "0%", top: "22%" },
-  { left: "4%", bottom: "16%" },
-  { right: "2%", bottom: "2%" },
+  { left: "3%", top: "4%" },
+  { right: "10%", top: "18%" },   // pulled inside — no offscreen bleed
+  { left: "6%", bottom: "18%" },  // hugs the globe edge
+  { right: "8%", bottom: "30%" }, // moved up onto the globe surface
 ] as const;
+
+/* words glued onto the globe surface — they rotate/tilt with the globe */
+const SURFACE_WORDS = ["schön", "Genau!", "über", "Servus", "müsste", "heiß", "Spaß", "Egal."];
 
 function Bubble({ index, reduced }: { index: number; reduced: boolean }) {
   const [wi, setWi] = useState(index); // stagger start across the pool
@@ -124,6 +127,30 @@ export default function HeroGlobe() {
     const BASE_TILT = 0.42;
     let last = performance.now();
 
+    /* surface words: DOM spans glued to fixed sphere points — same math as
+       the particles every frame, so they rotate/tilt in perfect sync */
+    const host = canvas.parentElement!;
+    const surfaceSpans: { span: HTMLSpanElement; p: [number, number, number] }[] = [];
+    const swCount = window.innerWidth < 768 ? 5 : SURFACE_WORDS.length;
+    for (let i = 0; i < swCount; i++) {
+      const pIdx = Math.floor((i + 0.5) * (COUNT / swCount)); // spread across the sphere
+      const span = document.createElement("span");
+      span.textContent = SURFACE_WORDS[i];
+      span.style.position = "absolute";
+      span.style.left = "0";
+      span.style.top = "0";
+      span.style.color = "#fbbf24";
+      span.style.fontWeight = "800";
+      span.style.pointerEvents = "none";
+      span.style.userSelect = "none";
+      span.style.whiteSpace = "nowrap";
+      span.style.zIndex = "15";
+      span.style.willChange = "transform, opacity";
+      span.style.textShadow = "0 0 16px rgba(251,191,36,0.45), 0 1px 3px rgba(0,0,0,0.6)";
+      host.appendChild(span);
+      surfaceSpans.push({ span, p: pts[pIdx] });
+    }
+
     const resize = () => {
       const parent = canvas.parentElement!;
       W = parent.clientWidth;
@@ -205,6 +232,21 @@ export default function HeroGlobe() {
         ctx.fillRect(sx - size / 2, sy - size / 2, size, size);
       }
 
+      /* surface words — glued to the sphere, visible on the front only */
+      for (const { span, p: [x, y, z] } of surfaceSpans) {
+        const p = project(x, y, z);
+        const persp = focal / (focal - p.z * R);
+        const sx = cx + p.x * R * persp;
+        const sy = cy + p.y * R * persp;
+        const front = (p.z + 1) / 2; // 0 back → 1 front
+        const vis = Math.max(0, Math.min(1, (front - 0.45) / 0.35)); // fades in near the front
+        const scale = 0.72 + front * 0.5;
+        span.style.opacity = String(vis * 0.95);
+        span.style.transform = `translate(-50%,-50%) translate(${sx.toFixed(1)}px, ${sy.toFixed(1)}px) scale(${scale.toFixed(2)})`;
+        span.style.filter = vis < 0.4 ? "blur(1.5px)" : "none";
+        span.style.fontSize = `clamp(0.85rem, ${R * 0.011}vw + 0.45rem, 1.35rem)`;
+      }
+
       raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
@@ -213,6 +255,7 @@ export default function HeroGlobe() {
       cancelAnimationFrame(raf);
       window.removeEventListener("mousemove", onMove);
       ro.disconnect();
+      for (const { span } of surfaceSpans) span.remove();
     };
   }, []);
 
@@ -237,13 +280,13 @@ export default function HeroGlobe() {
         <span
           key={w}
           aria-hidden="true"
-          className="fly-across absolute z-20 font-extrabold text-amber-300/90 pointer-events-none select-none"
+          className="fly-across absolute z-20 font-extrabold text-amber-300/60 pointer-events-none select-none"
           style={{
             top: `${24 + i * 22}%`,
             animationDelay: `${i * 3.2}s`,
             animationDuration: `${11 + i * 2.5}s`,
-            fontSize: "clamp(1.2rem, 2.4vw, 1.9rem)",
-            textShadow: "0 0 22px rgba(251,191,36,0.55)",
+            fontSize: "clamp(1rem, 2vw, 1.5rem)",
+            textShadow: "0 0 22px rgba(251,191,36,0.4)",
           }}
         >
           {w}
