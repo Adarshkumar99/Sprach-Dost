@@ -26,10 +26,10 @@ const BUBBLE_WORDS: { w: string; c: string }[] = [
 ];
 
 const BUBBLE_POS = [
-  { left: "3%", top: "4%" },
-  { right: "10%", top: "18%" },   // pulled inside — no offscreen bleed
-  { left: "6%", bottom: "18%" },  // hugs the globe edge
-  { right: "8%", bottom: "30%" }, // moved up onto the globe surface
+  { left: "2%", top: "12%" },    // rim pe globe
+  { right: "6%", top: "20%" },
+  { left: "4%", bottom: "22%" },
+  { right: "6%", bottom: "26%" }, // up on the rim — not floating away
 ] as const;
 
 /* words glued onto the globe surface — they rotate/tilt with the globe */
@@ -68,6 +68,12 @@ function Bubble({ index, reduced }: { index: number; reduced: boolean }) {
     >
       <div className="font-extrabold text-amber-300 text-base md:text-lg leading-tight">{word.w}</div>
       <div className="text-[10px] tracking-[0.2em] opacity-60 font-semibold">{word.c} · GERMAN</div>
+      {/* caret pointing toward the globe */}
+      <span
+        aria-hidden="true"
+        className={`bubble-caret ${index < 2 ? "caret-down" : "caret-up"}`}
+        style={{ display: "block" }}
+      />
     </div>
   );
 }
