@@ -1,8 +1,7 @@
 import Link from "next/link";
-import Avatar from "@/components/Avatar";
 import WaitlistForm from "@/components/WaitlistForm";
 import AuthButton from "@/components/AuthButton";
-import WordSphere from "@/components/WordSphere";
+import HeroGlobe from "@/components/HeroGlobe";
 
 export default function Home() {
   return (
@@ -30,27 +29,35 @@ export default function Home() {
 
       {/* HERO */}
       <section className="relative flex flex-col-reverse md:flex-row items-center justify-between gap-10 px-6 md:px-12 xl:px-24 py-14 md:py-24 overflow-hidden">
-        {/* 3D floating German word sphere — full-bleed backdrop */}
-        <WordSphere />
-        {/* readability veil: darkens the middle so the headline stays crisp */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 60% 55% at 50% 45%, rgba(11,16,32,0.88) 0%, rgba(11,16,32,0.45) 55%, rgba(11,16,32,0.15) 100%)" }}
-        />
         <div className="relative max-w-xl text-center md:text-left">
-          <div className="inline-block glass rounded-full px-4 py-1 text-xs font-semibold mb-5 tracking-wider">
+          <div className="hero-line-in inline-block glass rounded-full px-4 py-1 text-xs font-semibold mb-5 tracking-wider" style={{ animationDelay: "0.05s" }}>
             100% FREE to start • No card needed
           </div>
           <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight">
-            Your German speaking partner — <span className="german-gradient bg-clip-text text-transparent">anytime, anywhere.</span>
+            <span className="hero-line-in block" style={{ animationDelay: "0.15s" }}>
+              Your German
+            </span>
+            <span className="hero-line-in block" style={{ animationDelay: "0.28s" }}>
+              speaking partner —{" "}
+            </span>
+            <span className="german-gradient bg-clip-text text-transparent">
+              {"anytime, anywhere.".split("").map((ch, i) => (
+                <span
+                  key={i}
+                  className="letter-pop"
+                  style={{ animationDelay: `${0.45 + i * 0.035}s` }}
+                >
+                  {ch === " " ? "\u00A0" : ch}
+                </span>
+              ))}
+            </span>
           </h1>
-          <p className="mt-5 text-lg opacity-80 leading-relaxed">
+          <p className="hero-line-in mt-5 text-lg opacity-80 leading-relaxed" style={{ animationDelay: "0.55s" }}>
             Talk with Anna, learn from Lehrer — German speaking practice from <b>A1 to C2</b> with
             voice-enabled avatar teachers. Real voice, real corrections, simple English explanations.
             Grammar, vocabulary and Goethe exam prep — all in one place.
           </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+          <div className="hero-line-in mt-8 flex flex-col sm:flex-row gap-4 justify-center md:justify-start" style={{ animationDelay: "0.7s" }}>
             <Link href="/practice/lehrer" className="btn-primary text-center">
               👨‍🏫 Learn with Lehrer
             </Link>
@@ -58,16 +65,12 @@ export default function Home() {
               🗣️ Talk with Anna
             </Link>
           </div>
-          <p className="mt-4 text-xs opacity-60">
+          <p className="hero-line-in mt-4 text-xs opacity-60" style={{ animationDelay: "0.85s" }}>
             Best in Chrome / Edge • Microphone permission needed • No signup, no card
           </p>
         </div>
-        <div className="relative glass rounded-3xl p-8 flex gap-6">
-          <Avatar variant="anna" size={180} name="Anna" statusText="Conversation Partner" />
-          <div className="hidden sm:block border-l border-white/10" />
-          <div className="hidden sm:flex flex-col justify-center">
-            <Avatar variant="jonas" size={180} name="Jonas" statusText="Topic Teacher" />
-          </div>
+        <div className="hero-line-in relative" style={{ animationDelay: "0.3s" }}>
+          <HeroGlobe />
         </div>
       </section>
 
