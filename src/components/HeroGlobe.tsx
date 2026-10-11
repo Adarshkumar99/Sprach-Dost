@@ -63,8 +63,8 @@ function Bubble({ index, reduced }: { index: number; reduced: boolean }) {
         transition: "opacity .35s ease, transform .35s ease",
       }}
     >
-      <div className="font-extrabold text-amber-300 text-sm md:text-base leading-tight">{word.w}</div>
-      <div className="text-[9px] tracking-[0.2em] opacity-60 font-semibold">{word.c} · GERMAN</div>
+      <div className="font-extrabold text-amber-300 text-base md:text-lg leading-tight">{word.w}</div>
+      <div className="text-[10px] tracking-[0.2em] opacity-60 font-semibold">{word.c} · GERMAN</div>
     </div>
   );
 }
@@ -168,7 +168,7 @@ export default function HeroGlobe() {
       }
 
       const cx = W / 2, cy = H / 2;
-      const R = Math.min(W, H) * 0.34;
+      const R = Math.min(W, H) * 0.40;
       const focal = R * 3;
 
       /* wireframe rings */
@@ -197,7 +197,7 @@ export default function HeroGlobe() {
         const sx = cx + p.x * R * persp;
         const sy = cy + p.y * R * persp;
         const front = (p.z + 1) / 2; // 0 back → 1 front
-        const size = 1 + front * 1.8;
+        const size = 1.2 + front * 2.2;
         const alpha = 0.08 + front * 0.8;
         ctx.fillStyle = front > 0.75
           ? `rgba(251,191,36,${alpha.toFixed(2)})`
@@ -217,29 +217,48 @@ export default function HeroGlobe() {
   }, []);
 
   return (
-    <div className="relative w-full max-w-[460px] aspect-square mx-auto">
+    <div className="relative w-full aspect-square mx-auto globe-zoom-in">
       {/* halo glow */}
       <div
         aria-hidden="true"
-        className="absolute -inset-10 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(251,191,36,0.16) 0%, rgba(251,191,36,0.05) 40%, transparent 70%)" }}
+        className="absolute -inset-14 rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(circle, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.06) 40%, transparent 70%)" }}
       />
       {/* globe */}
       <canvas ref={canvasRef} className="relative z-10" aria-hidden="true" />
       {/* ground shadow */}
       <div
         aria-hidden="true"
-        className="absolute left-1/2 -translate-x-1/2 -bottom-4 w-[62%] h-6 rounded-full pointer-events-none"
-        style={{ background: "radial-gradient(ellipse, rgba(251,191,36,0.25) 0%, transparent 70%)", filter: "blur(6px)" }}
+        className="absolute left-1/2 -translate-x-1/2 -bottom-4 w-[66%] h-7 rounded-full pointer-events-none"
+        style={{ background: "radial-gradient(ellipse, rgba(251,191,36,0.3) 0%, transparent 70%)", filter: "blur(7px)" }}
       />
+      {/* foreground flying words — cinematic drift across the globe's face */}
+      {["Egal.", "Ach so!", "Doch!"].map((w, i) => (
+        <span
+          key={w}
+          aria-hidden="true"
+          className="fly-across absolute z-20 font-extrabold text-amber-300/90 pointer-events-none select-none"
+          style={{
+            top: `${24 + i * 22}%`,
+            animationDelay: `${i * 3.2}s`,
+            animationDuration: `${11 + i * 2.5}s`,
+            fontSize: "clamp(1.2rem, 2.4vw, 1.9rem)",
+            textShadow: "0 0 22px rgba(251,191,36,0.55)",
+          }}
+        >
+          {w}
+        </span>
+      ))}
       {/* orbiting speech bubbles */}
       {BUBBLE_POS.map((_, i) => (
         <Bubble key={i} index={i} reduced={reduced} />
       ))}
       {/* sparkles */}
-      <span aria-hidden="true" className="twinkle absolute text-amber-300/70 text-lg" style={{ left: "12%", top: "30%" }}>✦</span>
-      <span aria-hidden="true" className="twinkle absolute text-amber-300/60 text-sm hidden sm:inline" style={{ right: "10%", top: "8%", animationDelay: "1.2s" }}>✦</span>
-      <span aria-hidden="true" className="twinkle absolute text-amber-300/50 text-base hidden sm:inline" style={{ left: "18%", bottom: "6%", animationDelay: "2.1s" }}>✦</span>
+      <span aria-hidden="true" className="twinkle absolute text-amber-300/70 text-2xl" style={{ left: "10%", top: "28%" }}>✦</span>
+      <span aria-hidden="true" className="twinkle absolute text-amber-300/60 text-xl hidden sm:inline" style={{ right: "8%", top: "6%", animationDelay: "1.2s" }}>✦</span>
+      <span aria-hidden="true" className="twinkle absolute text-amber-300/50 text-lg hidden sm:inline" style={{ left: "16%", bottom: "4%", animationDelay: "2.1s" }}>✦</span>
+      <span aria-hidden="true" className="twinkle absolute text-amber-200/40 text-2xl hidden md:inline" style={{ right: "14%", bottom: "22%", animationDelay: "0.7s" }}>✦</span>
+      <span aria-hidden="true" className="twinkle absolute text-amber-200/40 text-lg hidden md:inline" style={{ left: "40%", top: "-2%", animationDelay: "1.8s" }}>✦</span>
       {/* caption */}
       <p className="absolute -bottom-9 left-1/2 -translate-x-1/2 text-xs opacity-50 whitespace-nowrap">
         🖱️ A world of German worth exploring

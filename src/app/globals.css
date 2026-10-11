@@ -154,9 +154,33 @@ body {
   animation: twinkle 2.6s ease-in-out infinite;
 }
 
+/* globe entrance: soft spring zoom */
+@keyframes globe-zoom-in {
+  from { opacity: 0; transform: scale(0.82) translateY(18px); }
+  60% { opacity: 1; transform: scale(1.04) translateY(-2px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.globe-zoom-in {
+  animation: globe-zoom-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.25s backwards;
+}
+
+/* foreground words drifting across the globe face with motion blur */
+@keyframes fly-across {
+  0% { transform: translateX(-25%) scale(0.9); opacity: 0; filter: blur(3px); }
+  10% { opacity: 0.95; filter: blur(1px); }
+  22% { filter: blur(0px); }
+  75% { opacity: 0.9; filter: blur(0.6px); }
+  100% { transform: translateX(125%) scale(1.05); opacity: 0; filter: blur(3px); }
+}
+.fly-across {
+  left: 0;
+  animation: fly-across linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .hero-line-in, .letter-pop { opacity: 1; animation: none; }
-  .bubble-float, .twinkle { animation: none; }
+  .hero-line-in, .letter-pop, .globe-zoom-in { opacity: 1; animation: none; }
+  .bubble-float, .twinkle, .fly-across { animation: none; }
+  .fly-across { opacity: 0; }
 }
 
 /* level strip colors */

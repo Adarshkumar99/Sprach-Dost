@@ -28,7 +28,7 @@ export default function Home() {
       </nav>
 
       {/* HERO */}
-      <section className="relative flex flex-col-reverse md:flex-row items-center justify-between gap-10 px-6 md:px-12 xl:px-24 py-14 md:py-24 overflow-hidden">
+      <section className="relative flex flex-col-reverse md:flex-row items-center justify-between gap-10 px-6 md:px-12 xl:px-24 py-14 md:py-20 md:min-h-[84vh] overflow-hidden">
         <div className="relative max-w-xl text-center md:text-left">
           <div className="hero-line-in inline-block glass rounded-full px-4 py-1 text-xs font-semibold mb-5 tracking-wider" style={{ animationDelay: "0.05s" }}>
             100% FREE to start • No card needed
@@ -69,7 +69,7 @@ export default function Home() {
             Best in Chrome / Edge • Microphone permission needed • No signup, no card
           </p>
         </div>
-        <div className="hero-line-in relative" style={{ animationDelay: "0.3s" }}>
+        <div className="hero-line-in relative w-full md:w-[560px] lg:w-[680px] xl:w-[760px] md:-mr-20 lg:-mr-32 shrink-0" style={{ animationDelay: "0.3s" }}>
           <HeroGlobe />
         </div>
       </section>
