@@ -90,6 +90,7 @@ export default function Home() {
             { icon: "📇", title: "4,500+ Flashcards", desc: "A1 (1,000) • A2 (1,500) • B1 (2,000) words with 3D flip cards, audio and spaced repetition — words come back right before you forget them." },
             { icon: "📐", title: "Grammar — 1,000+ Questions", desc: "The complete Goethe syllabus A1, A2 and B1: short English lessons, declension tables, then quizzes with instant explanations." },
             { icon: "📝", title: "Feedback Report", desc: "After every session: your score, mistakes, new vocabulary and a plan for the next step." },
+            { icon: "📖", title: "Story Time", desc: "Short German stories with English under every paragraph — then vocab from the story plus a 5-question comprehension quiz. 🔊 per paragraph." },
             { icon: "🧭", title: "Placement Test", desc: "45 quick questions and we pinpoint your level (A1–B1) — so you start exactly where you should, not from zero." },
           ].map((f) => (
             <div key={f.title} className="glass rounded-2xl p-6 hover:scale-[1.02] transition-transform">
@@ -158,7 +159,7 @@ export default function Home() {
           <div className="rounded-2xl p-8 border-2 border-amber-400/60 relative glass">
             <div className="absolute -top-3 right-6 german-gradient text-xs font-bold px-3 py-1 rounded-full">COMING SOON</div>
             <div className="text-sm font-bold tracking-wider text-amber-400 mb-1">PRO</div>
-            <div className="text-4xl font-extrabold mb-4">₹199<span className="text-lg font-normal opacity-70">/mo</span></div>
+            <div className="text-4xl font-extrabold mb-4">₹500<span className="text-lg font-normal opacity-70">/mo</span></div>
             <ul className="space-y-2 text-sm opacity-85 mb-8">
               <li>⭐ Unlimited conversations</li>
               <li>⭐ Full A1–C2 curriculum + exam mocks</li>

@@ -36,6 +36,11 @@ Most German learners in India complete months of coaching yet freeze when they h
 - Instant right/wrong + a one-line explanation for every answer
 - Lessons written in simple English with German examples and declension tables
 
+### Story Time
+- **100+ short stories per level** (A1/A2/B1), each: German paragraph with English right under it, 8–12 vocab words from the story, and a 5-question comprehension quiz
+- 🔊 one-tap audio per paragraph
+- Read state saved + synced; `npm run gen:stories` tops up the library anytime (resumable)
+
 ### Placement Test
 - **45 tap-to-answer questions** (A1 → A2 → B1, rising difficulty) that recommend your starting level in ~5 minutes, no typing
 

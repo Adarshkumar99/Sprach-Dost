@@ -77,6 +77,21 @@ export default function Practice() {
         </Link>
 
         <Link
+          href="/stories"
+          className="md:col-span-2 glass rounded-3xl p-8 flex flex-col sm:flex-row items-center gap-6 hover:scale-[1.01] hover:border-pink-400/50 transition-all"
+        >
+          <div className="text-6xl">📖</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-xl mb-1">Story Time — Read German with English underneath</div>
+            <p className="text-sm opacity-70">
+              A1/A2/B1 short stories — every German paragraph has English right under it,
+              then <b>vocab from the story + a comprehension quiz</b>. 🔊 audio per paragraph.
+            </p>
+          </div>
+          <span className="btn-primary text-sm whitespace-nowrap">Read a story →</span>
+        </Link>
+
+        <Link
           href="/placement"
           className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-purple-400/50 transition-all"
         >

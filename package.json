@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "gen:vocab": "node scripts/generate-vocab.mjs",
-    "gen:grammar": "node scripts/generate-grammar.mjs"
+    "gen:grammar": "node scripts/generate-grammar.mjs",
+    "gen:stories": "node scripts/generate-stories.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.109.0",
