@@ -17,6 +17,8 @@ export default function Home() {
           <Link href="/practice/lehrer" className="hover:text-amber-400 transition-colors">Lehrer 👨‍🏫</Link>
           <Link href="/vocab" className="hover:text-amber-400 transition-colors">Vocab 📇</Link>
           <Link href="/grammar" className="hover:text-amber-400 transition-colors">Grammar 📐</Link>
+          <Link href="/stories" className="hover:text-amber-400 transition-colors">Stories 📖</Link>
+          <Link href="/placement" className="hover:text-amber-400 transition-colors">Placement 🧭</Link>
           <a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing</a>
         </div>
         <div className="flex items-center gap-3">
@@ -26,6 +28,21 @@ export default function Home() {
           </Link>
         </div>
       </nav>
+      {/* mobile nav — links are hidden above on small screens, this row keeps them reachable */}
+      <div className="md:hidden flex gap-2 px-6 pb-3 overflow-x-auto">
+        {[
+          ["Anna", "/practice/anna", "🗣️"],
+          ["Lehrer", "/practice/lehrer", "👨‍🏫"],
+          ["Vocab", "/vocab", "📇"],
+          ["Grammar", "/grammar", "📐"],
+          ["Stories", "/stories", "📖"],
+          ["Placement", "/placement", "🧭"],
+        ].map(([label, href, icon]) => (
+          <Link key={href} href={href} className="glass rounded-full px-4 py-2 text-sm whitespace-nowrap hover:border-amber-400/50">
+            {icon} {label}
+          </Link>
+        ))}
+      </div>
 
       {/* HERO */}
       <section className="relative flex flex-col-reverse md:flex-row items-center justify-between gap-10 px-6 md:px-12 xl:px-24 py-14 md:py-20 md:min-h-[84vh] overflow-hidden">
