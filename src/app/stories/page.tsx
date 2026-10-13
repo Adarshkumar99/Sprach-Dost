@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { speakSmart, loadVoices } from "@/lib/speech";
 import { pushProgressToCloud } from "@/lib/supabase";
+import { recordWeekly } from "@/lib/weekly";
+import { recordSession } from "@/lib/progress";
 
 /* ───────── types ───────── */
 type Story = {
@@ -26,6 +28,8 @@ function markRead(level: string, id: string) {
   if (!r[`${level}|${id}`]) {
     r[`${level}|${id}`] = Date.now();
     localStorage.setItem(READ_KEY, JSON.stringify(r));
+    recordWeekly({ stories: 1 });
+    recordSession({ minutes: 5, words: 0, level });
     pushProgressToCloud();
   }
 }

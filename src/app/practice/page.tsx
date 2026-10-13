@@ -2,6 +2,7 @@ import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import ProgressCard from "@/components/ProgressCard";
 import AuthButton from "@/components/AuthButton";
+import WeeklyChallenges from "@/components/WeeklyChallenges";
 
 export default function Practice() {
   return (
@@ -104,12 +105,41 @@ export default function Practice() {
           </div>
           <span className="btn-ghost text-sm whitespace-nowrap">Take the test →</span>
         </Link>
+        <Link
+          href="/practice/exam"
+          className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-red-400/50 transition-all"
+        >
+          <div className="text-5xl">🎓</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-lg mb-1">Speaking Exam Simulator — Goethe style</div>
+            <p className="text-sm opacity-70">
+              Hear the task → speak your German answer → instant keyword feedback per part.
+              Works without AI keys (browser mic + free voices).
+            </p>
+          </div>
+          <span className="btn-ghost text-sm whitespace-nowrap">Start exam →</span>
+        </Link>
+
+        <Link
+          href="/pronounce"
+          className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-cyan-400/50 transition-all"
+        >
+          <div className="text-5xl">🔊</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-lg mb-1">Pronunciation Trainer</div>
+            <p className="text-sm opacity-70">
+              Listen → repeat → get an instant ✅ / 🔁 with streak count. Uses your built-in browser speech check.
+            </p>
+          </div>
+          <span className="btn-ghost text-sm whitespace-nowrap">Practice speaking →</span>
+        </Link>
       </div>
 
       <p className="mt-10 text-xs opacity-50 text-center max-w-md">
         💡 Tip: For the best voice quality use Chrome or Edge, and allow microphone permission when asked.
       </p>
 
+      <WeeklyChallenges />
       <ProgressCard />
     </main>
   );

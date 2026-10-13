@@ -4,6 +4,7 @@
  */
 
 import { pushProgressToCloud } from "./supabase";
+import { recordWeekly } from "./weekly";
 
 export type ProgressData = {
   sessions: number;
@@ -61,6 +62,7 @@ export function recordSession(opts: { minutes?: number; words?: number; level?: 
   }
   p.lastDay = t;
   localStorage.setItem(KEY, JSON.stringify(p));
+  recordWeekly({ minutes: opts.minutes ?? 5, words: opts.words ?? 0 }); // feed weekly challenges
   pushProgressToCloud();
 }
 

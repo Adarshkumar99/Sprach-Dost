@@ -9,7 +9,8 @@
     "lint": "eslint",
     "gen:vocab": "node scripts/generate-vocab.mjs",
     "gen:grammar": "node scripts/generate-grammar.mjs",
-    "gen:stories": "node scripts/generate-stories.mjs"
+    "gen:stories": "node scripts/generate-stories.mjs",
+    "gen:all": "npm run gen:vocab && npm run gen:grammar && npm run gen:stories"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.109.0",

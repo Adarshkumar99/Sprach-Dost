@@ -37,6 +37,8 @@ export default function Home() {
           ["Grammar", "/grammar", "📐"],
           ["Stories", "/stories", "📖"],
           ["Placement", "/placement", "🧭"],
+          ["Exam", "/practice/exam", "🎓"],
+          ["Speak", "/pronounce", "🔊"],
         ].map(([label, href, icon]) => (
           <Link key={href} href={href} className="glass rounded-full px-4 py-2 text-sm whitespace-nowrap hover:border-amber-400/50">
             {icon} {label}

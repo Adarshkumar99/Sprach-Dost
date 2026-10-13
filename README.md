@@ -41,6 +41,16 @@ Most German learners in India complete months of coaching yet freeze when they h
 - 🔊 one-tap audio per paragraph
 - Read state saved + synced; `npm run gen:stories` tops up the library anytime (resumable)
 
+### Speaking Exam Simulator
+- Goethe-style oral format (Teil 1/2/3), avatar examiner reads the task aloud, you speak in German, keyword-based feedback per task
+
+### Pronunciation Trainer
+- Listen → repeat → instant ✅/🔁 feedback with streak tracking, powered by the same Web Speech API (English/German aware)
+
+### Weekly Challenges
+- Three goals reset every Monday: 30 new words • 60 min practice • 5 stories
+- Progress bar on the practice hub, streak badge, synced if logged in
+
 ### Placement Test
 - **45 tap-to-answer questions** (A1 → A2 → B1, rising difficulty) that recommend your starting level in ~5 minutes, no typing
 
