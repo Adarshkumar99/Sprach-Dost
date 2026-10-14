@@ -86,6 +86,18 @@ Most German learners in India complete months of coaching yet freeze when they h
 | Avatars | Hand-built animated SVG with lip-sync |
 | Distribution | PWA (manifest + standalone display) |
 
+## Content generation
+
+The word/story/grammar banks top themselves up automatically every day via GitHub Actions
+(`.github/workflows/daily-content.yml`) — no manual runs needed after setup:
+
+1. GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**
+2. Name: `GROQ_API_KEY`, value: your free key from [console.groq.com](https://console.groq.com)
+3. Done — every day at 06:00 UTC the generator runs, commits, and pushes new content.
+   Manual trigger anytime: **Actions → Daily content top-up → Run workflow**.
+
+Locally you can still force a run: `npm run gen:all`.
+
 ## Run locally
 
 ```bash

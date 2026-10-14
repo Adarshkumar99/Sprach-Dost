@@ -1,0 +1,46 @@
+name: Daily content top-up
+
+# Runs the vocabulary / grammar / story generators once a day on Groq's
+# free daily token budget, then commits + pushes whatever was generated.
+# Manual trigger also available: Actions tab → "Daily content top-up" → Run workflow.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # 06:00 UTC ≈ 11:30 AM IST — after daily token reset
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Prepare .env.local
+        run: echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" > .env.local
+
+      - name: Run content generators
+        run: |
+          npm run gen:all || true   # scripts exit 0/1 depending on top-ups; never fail the job
+        timeout-minutes: 110
+
+      - name: Commit + push if content changed
+        run: |
+          git config user.name "sprachdost-bot"
+          git config user.email "bot@sprachdost.local"
+          git add public/vocab public/grammar public/stories
+          if git diff --staged --quiet; then
+            echo "No new content today (budget spent or targets met)."
+          else
+            git commit -m "chore(content): daily vocab/grammar/stories top-up"
+            git push
+          fi
