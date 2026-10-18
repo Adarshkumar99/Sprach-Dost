@@ -67,6 +67,72 @@ export type FeedbackReport = {
   raw: string;
 };
 
+/** AI grade for exam Schreiben (writing) tasks */
+export type ExamWritingReport = {
+  score: string;
+  task: string;
+  grammar: string;
+  vocab: string;
+  fixes: string;
+  raw: string;
+};
+
+export function parseExamWriting(text: string): ExamWritingReport {
+  const get = (re: RegExp) => {
+    const m = text.match(re);
+    return m ? stripMarkdown(m[1]) : "";
+  };
+  return {
+    score: get(/SCORE:\s*([^\n]*)/i),
+    task: get(/TASK:\s*([\s\S]*?)(?=\n[A-Z]+:|$)/i),
+    grammar: get(/GRAMMAR:\s*([\s\S]*?)(?=\n[A-Z]+:|$)/i),
+    vocab: get(/VOCAB:\s*([\s\S]*?)(?=\n[A-Z]+:|$)/i),
+    fixes: get(/FIXES:\s*([\s\S]*?)$/i),
+    raw: text,
+  };
+}
+
+/** AI rubric for exam Sprechen tasks */
+export type ExamSpeakingReport = {
+  fluency: string;
+  vocab: string;
+  accuracy: string;
+  pronunciation: string;
+  mistakes: string;
+  cefr: string;
+  raw: string;
+};
+
+export function parseExamSpeaking(text: string): ExamSpeakingReport {
+  const get = (re: RegExp) => {
+    const m = text.match(re);
+    return m ? stripMarkdown(m[1]) : "";
+  };
+  return {
+    fluency: get(/FLUENCY:\s*([\s\S]*?)(?=\n[A-Z]+:|$)/i),
+    vocab: get(/VOCAB:\s*([\s\S]*?)(?=\n[A-Z]+:|$)/i),
+    accuracy: get(/ACCURACY:\s*([\s\S]*?)(?=\n[A-Z]+:|$)/i),
+    pronunciation: get(/PRONUNCIATION:\s*([\s\S]*?)(?=\n[A-Z]+:|$)/i),
+    mistakes: get(/MISTAKES:\s*([\s\S]*?)(?=\n[A-Z]+:|$)/i),
+    cefr: get(/CEFR:\s*([^\n]*)/i),
+    raw: text,
+  };
+}
+
+/** Extract a leading "n/15" or "n-15" score from an AI writing grade */
+export function parseScoreOutOf15(score: string): number | null {
+  const m = score.match(/(\d+(?:\.\d+)?)\s*(?:\/|out of|von)\s*15/i);
+  if (m) return Math.max(0, Math.min(15, parseFloat(m[1])));
+  const n = parseFloat(score);
+  return Number.isFinite(n) ? Math.max(0, Math.min(15, n)) : null;
+}
+
+/** Extract the first rating (1-5) from a rubric line like "4 — good ..." */
+export function parseRatingOutOf5(rubricLine: string): number | null {
+  const m = rubricLine.match(/\b([1-5])\b/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
 export function parseFeedback(text: string): FeedbackReport {
   const get = (re: RegExp) => {
     const m = text.match(re);
