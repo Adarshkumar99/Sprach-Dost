@@ -176,17 +176,17 @@ export default function Home() {
             <Link href="/practice" className="btn-ghost block text-center">Start now — free</Link>
           </div>
           <div className="rounded-2xl p-8 border-2 border-amber-400/60 relative glass">
-            <div className="absolute -top-3 right-6 german-gradient text-xs font-bold px-3 py-1 rounded-full">COMING SOON</div>
+            <div className="absolute -top-3 right-6 german-gradient text-xs font-bold px-3 py-1 rounded-full">LIVE</div>
             <div className="text-sm font-bold tracking-wider text-amber-400 mb-1">PRO</div>
             <div className="text-4xl font-extrabold mb-4">₹500<span className="text-lg font-normal opacity-70">/mo</span></div>
             <ul className="space-y-2 text-sm opacity-85 mb-8">
-              <li>⭐ Unlimited conversations</li>
-              <li>⭐ Full A1–C2 curriculum + exam mocks</li>
-              <li>⭐ Word-level pronunciation scoring</li>
-              <li>⭐ Custom vocab lists (upload yours)</li>
-              <li>⭐ Detailed session reports</li>
+              <li>⭐ Unlimited AI conversations</li>
+              <li>⭐ AI exam grading with CEFR rubric</li>
+              <li>⭐ Career packs: Nursing · IT · Ausbildung</li>
+              <li>⭐ Branching role-play stories</li>
+              <li>⭐ Cloud sync on every device</li>
             </ul>
-            <a href="#waitlist" className="btn-primary block text-center">Get early access</a>
+            <Link href="/pro" className="btn-primary block text-center">Upgrade to Pro →</Link>
           </div>
         </div>
       </section>
