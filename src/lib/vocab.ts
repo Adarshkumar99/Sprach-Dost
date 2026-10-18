@@ -8,7 +8,7 @@ export type VocabWord = {
   en: string;
   ex?: string;   // example sentence (German)
   exEn?: string; // example sentence (English translation)
-  level: "A1" | "A2" | "B1";
+  level: "A1" | "A2" | "B1" | "B2" | "C1";
   topic: string;
 };
 
@@ -262,7 +262,7 @@ export const VOCAB: VocabWord[] = [
   w("fühlen", "to feel", "A2", "Feelings"),
 ];
 
-export const VOCAB_LEVELS = ["A1", "A2", "B1"] as const;
+export const VOCAB_LEVELS = ["A1", "A2", "B1", "B2", "C1"] as const;
 
 export function topicsForLevel(level: string): string[] {
   return [...new Set(VOCAB.filter((v) => v.level === level).map((v) => v.topic))];
@@ -304,7 +304,7 @@ export function getAllWords(): VocabWord[] {
 export async function loadGeneratedVocab(): Promise<void> {
   if (loaded || typeof window === "undefined") return;
   loaded = true;
-  for (const lvl of ["A1", "A2", "B1"]) {
+  for (const lvl of ["A1", "A2", "B1", "B2", "C1"]) {
     try {
       const res = await fetch(`/vocab/${lvl}.json`);
       if (res.ok) {

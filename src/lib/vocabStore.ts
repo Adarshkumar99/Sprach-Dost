@@ -12,7 +12,7 @@ import { VOCAB, type VocabWord } from "./vocab";
 let cache: VocabWord[] | null = null;
 let pending: Promise<VocabWord[]> | null = null;
 
-const LEVELS = ["A1", "A2", "B1"];
+const LEVELS = ["A1", "A2", "B1", "B2", "C1"];
 
 export async function loadAllWords(): Promise<VocabWord[]> {
   if (cache) return cache;

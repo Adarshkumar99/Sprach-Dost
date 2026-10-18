@@ -37,10 +37,11 @@ jobs:
         run: |
           git config user.name "sprachdost-bot"
           git config user.email "bot@sprachdost.local"
-          git add public/vocab public/grammar public/stories
+          npm run gen:branches || true   # top up any missing branching graphs
+          git add public/vocab public/grammar public/stories src/lib/branches.generated.ts
           if git diff --staged --quiet; then
             echo "No new content today (budget spent or targets met)."
           else
-            git commit -m "chore(content): daily vocab/grammar/stories top-up"
+            git commit -m "chore(content): daily vocab/grammar/stories/branches top-up"
             git push
           fi

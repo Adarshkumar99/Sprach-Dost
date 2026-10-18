@@ -9,20 +9,33 @@ import MicButton from "@/components/MicButton";
 import { speakSmart, stopSpeaking, listen, loadVoices, isEcho } from "@/lib/speech";
 import { parseReply, parseFeedback, type FeedbackReport } from "@/lib/parse";
 import { recordSession, countVocab } from "@/lib/progress";
-import { SCENARIOS, SCENARIO_CATEGORIES, getScenario, SCENARIO_LEVEL_COLORS, type Scenario } from "@/lib/scenarios";
+import { SCENARIOS, SCENARIO_CATEGORIES, CAREER_TRACKS, getScenario, SCENARIO_LEVEL_COLORS, type Scenario } from "@/lib/scenarios";
+import { BRANCHES } from "@/lib/branches.generated";
 import { getStoredAvatar, storeAvatar } from "@/lib/avatars";
+import { getAccessToken } from "@/lib/supabase";
+import { addMistake } from "@/lib/mistakes";
 
 type Phase = "select" | "chat" | "feedback";
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+/** pull the story-graph transition (NEXT: nX) out of an avatar reply */
+function extractNext(reply: string): { cleaned: string; next: string | null } {
+  const m = reply.match(/(?:^|\n)\s*NEXT:\s*([A-Za-z0-9_-]+)\s*$/);
+  if (!m || m.index === undefined) return { cleaned: reply, next: null };
+  return { cleaned: reply.slice(0, m.index).trim(), next: m[1] };
+}
 
 export default function AnnaPage() {
   /* ---------- picker state ---------- */
   const [phase, setPhase] = useState<Phase>("select");
   const [category, setCategory] = useState<string>("Food & Drink");
+  const [track, setTrack] = useState<string | null>(null);
   const [level, setLevel] = useState("A1");
   const [avatarKey, setAvatarKey] = useState("anna");
   const [scenario, setScenario] = useState<Scenario | null>(null);
   const [needsKey, setNeedsKey] = useState(false);
+  const [limitHit, setLimitHit] = useState(false);
+  const [branchNode, setBranchNode] = useState<string>("");
 
   /* ---------- chat state ---------- */
   const [msgs, setMsgs] = useState<ChatMsg[]>([]);
@@ -123,22 +136,27 @@ export default function AnnaPage() {
 
   /* ---------- call the AI ---------- */
   const callAI = useCallback(
-    async (messages: { role: "user" | "assistant"; content: string }[], sc?: Scenario) => {
+    async (messages: { role: "user" | "assistant"; content: string }[], sc?: Scenario, node?: string) => {
+      const token = await getAccessToken().catch(() => null);
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           mode: "anna",
           level,
           topic: "",
           scenarioId: sc?.id ?? scenario?.id ?? "",
           avatarName: avatarNameRef.current,
+          branchNode: node ?? branchNode,
           messages,
         }),
       });
       return res.json();
     },
-    [level, scenario]
+    [level, scenario, branchNode]
   );
 
   /* ---------- start selected scenario ---------- */
@@ -151,22 +169,30 @@ export default function AnnaPage() {
     setMsgs([]);
     setHistory([]);
     setHint("");
+    setBranchNode("");
     transcriptRef.current = [];
 
     const startMsg = `START — begin the "${sc.title}" role-play. My level is ${level}. Start with your opening line (in character).`;
     let data;
     try {
-      data = await callAI([{ role: "user", content: startMsg }], sc);
+      data = await callAI([{ role: "user", content: startMsg }], sc, "");
     } catch {
       data = { offline: true };
     }
     setThinking(false);
 
+    if (data.limit) {
+      setNeedsKey(true);
+      setLimitHit(true);
+      return;
+    }
     if (data.offline || data.error || !data.reply) {
       setNeedsKey(true);
       return;
     }
-    const parsed = parseReply(data.reply);
+    const { cleaned, next } = extractNext(data.reply);
+    if (next) setBranchNode(next);
+    const parsed = parseReply(cleaned);
     setHistory([
       { role: "user", content: startMsg },
       { role: "assistant", content: data.reply },
@@ -192,8 +218,15 @@ export default function AnnaPage() {
       try {
         const data = await callAI(newHistory);
         setThinking(false);
+        if (data.limit) {
+          setHint("Daily free limit reached — upgrade to Pro for unlimited practice (Home → Pricing).");
+          return;
+        }
         if (!data.reply) return;
-        const parsed = parseReply(data.reply);
+        const { cleaned, next } = extractNext(data.reply);
+        if (next) setBranchNode(next);
+        const parsed = parseReply(cleaned);
+        if (parsed.korrektur) addMistake({ wrong: clean, note: parsed.korrektur, context: scenario?.title ?? "Conversation" });
         setHistory([...newHistory, { role: "assistant", content: data.reply }]);
         setMsgs((m) => [...m, { role: "avatar", german: parsed.german, erklarung: parsed.erklarung, korrektur: parsed.korrektur }]);
         setHint(parsed.hint);
@@ -203,7 +236,7 @@ export default function AnnaPage() {
         setThinking(false);
       }
     },
-    [history, callAI, avatarTalk]
+    [history, callAI, avatarTalk, scenario?.title]
   );
 
   handleStudentRef.current = handleStudent;
@@ -291,7 +324,7 @@ export default function AnnaPage() {
 
   /* ----- scenario & avatar picker ----- */
   if (phase === "select" || needsKey) {
-    const filtered = SCENARIOS.filter((s) => s.category === category);
+    const filtered = track ? SCENARIOS.filter((s) => s.track === track) : SCENARIOS.filter((s) => s.category === category);
     return (
       <main className="min-h-screen px-4 md:px-10 py-8 max-w-6xl mx-auto w-full">
         <Link href="/practice" className="text-sm opacity-70 hover:opacity-100">← Back</Link>
@@ -303,15 +336,31 @@ export default function AnnaPage() {
 
         {needsKey && (
           <div className="glass rounded-3xl p-8 mb-8 max-w-2xl mx-auto">
-            <h2 className="text-xl font-bold mb-3">⚡ Scenarios need the free AI key — 2 minute setup</h2>
-            <ol className="list-decimal list-inside space-y-2 text-sm opacity-90 leading-relaxed">
-              <li>Go to <a className="text-amber-400 underline" href="https://console.groq.com" target="_blank" rel="noreferrer">console.groq.com</a> → sign in with Google (free, no card)</li>
-              <li>"API Keys" → "Create API Key" → copy it</li>
-              <li>Create <code className="bg-white/10 px-2 py-0.5 rounded">.env.local</code> in the project folder with:<br />
-                <code className="bg-white/10 px-2 py-0.5 rounded block mt-1">GROQ_API_KEY=gsk_your_key_here</code></li>
-              <li>Restart the dev server: <code className="bg-white/10 px-2 py-0.5 rounded">npm run dev</code></li>
-            </ol>
-            <button onClick={() => setNeedsKey(false)} className="btn-ghost text-sm mt-5">← Back to scenarios</button>
+            {limitHit ? (
+              <>
+                <h2 className="text-xl font-bold mb-3">🚦 Daily free limit reached</h2>
+                <p className="text-sm opacity-90 leading-relaxed">
+                  You've used up today's free AI conversations. Come back tomorrow — or upgrade
+                  to Pro for unlimited scenarios, exam grading and more.
+                </p>
+                <div className="flex gap-3 mt-5">
+                  <Link href="/pro" className="btn-primary text-sm">✨ See Pro →</Link>
+                  <button onClick={() => { setNeedsKey(false); setLimitHit(false); }} className="btn-ghost text-sm">← Back to scenarios</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-xl font-bold mb-3">⚡ Scenarios need the free AI key — 2 minute setup</h2>
+                <ol className="list-decimal list-inside space-y-2 text-sm opacity-90 leading-relaxed">
+                  <li>Go to <a className="text-amber-400 underline" href="https://console.groq.com" target="_blank" rel="noreferrer">console.groq.com</a> → sign in with Google (free, no card)</li>
+                  <li>"API Keys" → "Create API Key" → copy it</li>
+                  <li>Create <code className="bg-white/10 px-2 py-0.5 rounded">.env.local</code> in the project folder with:<br />
+                    <code className="bg-white/10 px-2 py-0.5 rounded block mt-1">GROQ_API_KEY=gsk_your_key_here</code></li>
+                  <li>Restart the dev server: <code className="bg-white/10 px-2 py-0.5 rounded">npm run dev</code></li>
+                </ol>
+                <button onClick={() => setNeedsKey(false)} className="btn-ghost text-sm mt-5">← Back to scenarios</button>
+              </>
+            )}
           </div>
         )}
 
@@ -337,7 +386,31 @@ export default function AnnaPage() {
           ))}
         </div>
 
+        {/* career track tabs */}
+        <div className="flex gap-2 justify-start md:justify-center mb-4 overflow-x-auto pb-2">
+          <button
+            onClick={() => setTrack(null)}
+            className={`rounded-full px-4 py-2 text-sm whitespace-nowrap transition-all ${
+              track === null ? "bg-white text-black font-bold" : "glass hover:border-amber-400/40"
+            }`}
+          >
+            🌍 All scenarios
+          </button>
+          {CAREER_TRACKS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTrack(t.id)}
+              className={`rounded-full px-4 py-2 text-sm whitespace-nowrap transition-all ${
+                track === t.id ? "bg-white text-black font-bold" : "glass hover:border-amber-400/40"
+              }`}
+            >
+              {t.icon} {t.label}
+            </button>
+          ))}
+        </div>
+
         {/* category tabs */}
+        {!track && (
         <div className="flex gap-2 justify-start md:justify-center mb-6 overflow-x-auto pb-2">
           {SCENARIO_CATEGORIES.map((c) => (
             <button
@@ -351,6 +424,8 @@ export default function AnnaPage() {
             </button>
           ))}
         </div>
+        )}
+        {track && <div className="mb-6" />}
 
         {/* scenario cards */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -421,6 +496,8 @@ export default function AnnaPage() {
   }
 
   /* ----- chat ----- */
+  const storyNodes = scenario ? BRANCHES[scenario.id] : undefined;
+  const storyNode = storyNodes?.find((n) => n.id === branchNode) ?? storyNodes?.[0];
   return (
     <main className="min-h-screen flex flex-col px-4 md:px-8 py-6 max-w-5xl mx-auto w-full">
       <div className="flex items-center justify-between mb-4 gap-2">
@@ -464,6 +541,14 @@ export default function AnnaPage() {
         </div>
 
         <div className="flex-1 flex flex-col glass rounded-3xl p-4 md:p-6 min-h-[55vh]">
+          {storyNode && (
+            <div className="mb-3 rounded-xl bg-purple-500/10 border border-purple-400/30 px-3 py-2">
+              <div className="text-[10px] font-bold tracking-widest text-purple-300 mb-0.5">
+                📖 SITUATION{storyNode.final ? " — FINAL" : ""}
+              </div>
+              <p className="text-sm leading-snug">{storyNode.situation}</p>
+            </div>
+          )}
           <div className="flex-1 overflow-y-auto pr-1 mb-4 max-h-[52vh]">
             <ChatList messages={msgs} avatarColor="bg-red-600/80" />
             <div ref={chatEndRef} />

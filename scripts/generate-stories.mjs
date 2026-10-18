@@ -54,6 +54,8 @@ const TARGETS = {
   A1: Number(process.env.TARGET_A1 ?? 100),
   A2: Number(process.env.TARGET_A2 ?? 100),
   B1: Number(process.env.TARGET_B1 ?? 100),
+  B2: Number(process.env.TARGET_B2 ?? 60),
+  C1: Number(process.env.TARGET_C1 ?? 40),
 };
 const BATCH = 4; // stories per API call (token-safe for longer text)
 
@@ -98,7 +100,13 @@ async function callGroq(prompt, maxTokens) {
 }
 
 async function genBatch(level, theme, existingTitles) {
-  const pLevel = { A1: "short very simple sentences, A1 vocabulary only", A2: "simple past and present, A2 vocabulary", B1: "connected narrative, B1 vocabulary with opinion words" }[level];
+  const pLevel = {
+    A1: "short very simple sentences, A1 vocabulary only",
+    A2: "simple past and present, A2 vocabulary",
+    B1: "connected narrative, B1 vocabulary with opinion words",
+    B2: "nuanced narrative with subordinate clauses, B2 vocabulary, some opinions & indirect speech",
+    C1: "sophisticated narrative, C1 vocabulary, idiomatic expressions, complex sentence structure",
+  }[level];
   const sample = [...existingTitles].slice(-8).join(", ") || "(none)";
   const prompt = `Write ${BATCH} short German stories for CEFR level ${level}, theme: "${theme}" (${pLevel}).
 
@@ -151,7 +159,7 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true });
 
   const only = process.env.ONLY_LEVEL;
-  const levels = ["A1", "A2", "B1"].filter((l) => !only || l === only);
+  const levels = ["A1", "A2", "B1", "B2", "C1"].filter((l) => !only || l === only);
 
   for (const level of levels) {
     const file = path.join(outDir, `${level}.json`);

@@ -49,6 +49,8 @@ const TARGETS = {
   A1: Number(process.env.TARGET_A1 ?? 1000),
   A2: Number(process.env.TARGET_A2 ?? 1500),
   B1: Number(process.env.TARGET_B1 ?? 2000),
+  B2: Number(process.env.TARGET_B2 ?? 1200),
+  C1: Number(process.env.TARGET_C1 ?? 800),
 };
 
 // fine-grained topic lists (generator cycles through until target reached)
@@ -87,6 +89,29 @@ const TOPICS = {
     "presentation & discussion vocabulary", "report & summary language", "apartment hunting depth",
     "taxes & finance personal", "cooking specialties & regional food", "German festivals & traditions",
     "customer complaints & solutions",
+  ],
+  B2: [
+    "work & career development", "business & economics", "politics & elections", "society & social issues",
+    "media & journalism depth", "advertising & marketing", "environment & sustainability", "energy & climate policy",
+    "law & contracts", "crime & justice", "immigration & integration", "education & university life depth",
+    "science & technology", "research & innovation", "medicine & healthcare depth", "psychology & personality",
+    "relationships & communication", "urban life & infrastructure", "rural life & agriculture", "mobility & transport policy",
+    "culture & cultural differences", "art & architecture", "music & concert culture", "literature & reading habits",
+    "history & historical events", "sports & professional sport", "hobbies & creative pursuits", "travel & cultural exchange",
+    "food culture & nutrition debates", "fashion & consumerism", "digital privacy & internet", "artificial intelligence & future",
+    "volunteering & NGOs", "finance & investment", "insurance & paperwork", "meetings & presentations depth",
+    "negotiations & conflict resolution", "applications & assessment centres", "leadership & teamwork", "stress & work-life balance",
+  ],
+  C1: [
+    "abstract concepts & ideas", "argumentation & rhetoric", "academic writing & essays", "science & methodology",
+    "statistics & data interpretation", "philosophy & ethics", "psychology & cognition depth", "sociology & social change",
+    "economics & global markets", "globalisation & trade", "diplomacy & international relations", "eu & european politics",
+    "media ethics & press freedom", "digitalisation & society", "climate science & debates", "bioethics & genetics",
+    "urban planning & architecture depth", "literary analysis & style", "film & aesthetics", "linguistics & language change",
+    "idioms & fixed expressions", "colloquial speech & register shifts", "formal register & officialese", "humour & irony",
+    "proverbs & sayings", "emotion vocabulary depth", "character traits & nuances", "motivation & self-management",
+    "leadership & strategy language", "consulting & analysis language", "negotiation subtleties", "cross-cultural communication",
+    "history & historiography", "memory & remembrance culture", "migration & identity", "values & norms",
   ],
 };
 
@@ -144,7 +169,7 @@ async function main() {
   const outDir = path.join(ROOT, "public", "vocab");
   fs.mkdirSync(outDir, { recursive: true });
 
-  for (const level of ["A1", "A2", "B1"]) {
+  for (const level of ["A1", "A2", "B1", "B2", "C1"]) {
     const file = path.join(outDir, `${level}.json`);
     let existing = [];
     if (fs.existsSync(file)) {
