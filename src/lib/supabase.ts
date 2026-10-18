@@ -32,6 +32,24 @@ export async function getUser(): Promise<User | null> {
   return data.user ?? null;
 }
 
+/** current session access token (for authenticating to our own API routes) */
+export async function getAccessToken(): Promise<string | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data } = await sb.auth.getSession();
+  return data.session?.access_token ?? null;
+}
+
+/** is the logged-in user a Pro subscriber? (reads profiles.is_pro) */
+export async function getProStatus(): Promise<boolean> {
+  const sb = getSupabase();
+  if (!sb) return false;
+  const user = await getUser();
+  if (!user) return false;
+  const { data } = await sb.from("profiles").select("is_pro").eq("id", user.id).maybeSingle();
+  return !!data?.is_pro;
+}
+
 export function onAuthChange(cb: (user: User | null) => void) {
   const sb = getSupabase();
   if (!sb) return () => {};
@@ -69,6 +87,32 @@ export async function signOut() {
   await sb.auth.signOut();
 }
 
+/**
+ * Make sure a profiles row exists for the logged-in user (display name from
+ * Google metadata or email prefix). Returns the display name, or null.
+ */
+export async function ensureProfile(): Promise<string | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const user = await getUser();
+  if (!user) return null;
+  const meta = (user.user_metadata ?? {}) as Record<string, string>;
+  const fallbackName = user.email ? user.email.split("@")[0] : "Learner";
+  const name = meta.full_name || meta.name || fallbackName;
+
+  const { data: existing } = await sb
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (existing?.display_name) return existing.display_name as string;
+
+  await sb
+    .from("profiles")
+    .upsert({ id: user.id, display_name: name }, { onConflict: "id", ignoreDuplicates: true });
+  return name;
+}
+
 /* ── cloud progress sync (single JSON blob per user) ──
    Local keys synced: sprachdost_srs, sprachdost_deck_order,
    sprachdost_grammar_scores, sprachdost_progress          */
@@ -78,6 +122,9 @@ const SYNC_KEYS = [
   "sprachdost_deck_order",
   "sprachdost_grammar_scores",
   "sprachdost_progress",
+  "sprachdost_exams",
+  "sprachdost_mistakes",
+  "sprachdost_writing",
 ];
 
 let pushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -115,11 +162,26 @@ export async function pullProgressFromCloud(): Promise<boolean> {
   for (const k of SYNC_KEYS) {
     const cloudVal = cloud?.[k];
     if (cloudVal == null) continue;
-    let localVal: Record<string, unknown> = {};
-    try { localVal = JSON.parse(localStorage.getItem(k) ?? "{}"); } catch { localVal = {}; }
+    let localVal: unknown = null;
+    try { localVal = JSON.parse(localStorage.getItem(k) ?? "null"); } catch { localVal = null; }
+
+    // Array stores (e.g. exam history): union by JSON identity, newest first
+    if (Array.isArray(cloudVal) || Array.isArray(localVal)) {
+      const ca = Array.isArray(cloudVal) ? cloudVal : [];
+      const la = Array.isArray(localVal) ? localVal : [];
+      const seen = new Set(ca.map((e) => JSON.stringify(e)));
+      const merged = [...ca, ...la.filter((e) => !seen.has(JSON.stringify(e)))];
+      merged.sort((a, b) => Number((b as { date?: number })?.date ?? 0) - Number((a as { date?: number })?.date ?? 0));
+      localStorage.setItem(k, JSON.stringify(merged.slice(0, 30)));
+      changed = true;
+      continue;
+    }
+
+    let localMap: Record<string, unknown> = {};
+    try { localMap = (localVal && typeof localVal === "object" ? localVal : {}) as Record<string, unknown>; } catch { localMap = {}; }
     // shallow per-key merge: whichever side has an entry keeps it; on tie prefer higher counts
     const merged: Record<string, unknown> = { ...cloudVal };
-    for (const [id, localEntry] of Object.entries(localVal)) {
+    for (const [id, localEntry] of Object.entries(localMap)) {
       const ce = merged[id] as Record<string, number> | undefined;
       const le = localEntry as Record<string, number>;
       if (!ce) { merged[id] = le; continue; }

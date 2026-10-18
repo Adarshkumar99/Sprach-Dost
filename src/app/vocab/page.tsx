@@ -11,7 +11,7 @@ import { recordSession } from "@/lib/progress";
 type Phase = "setup" | "session" | "done";
 type Mode = "learn" | "review" | "quiz";
 type QuizItem = { word: VocabWord; options: string[]; correctIndex: number };
-const LEVELS = ["A1", "A2", "B1"] as const;
+const LEVELS = ["A1", "A2", "B1", "B2", "C1"] as const;
 const QUIZ_LEN = 20;
 
 export default function VocabPage() {
@@ -36,6 +36,12 @@ export default function VocabPage() {
 
   const startRef = useRef<number>(0);
   const touchX = useRef<number | null>(null);
+
+  /* deep-link level (?level=B2 from Word of the Day) */
+  useEffect(() => {
+    const l = new URLSearchParams(window.location.search).get("level");
+    if (l) queueMicrotask(() => setLevel(l));
+  }, []);
 
   /* load words + topics + stats */
   useEffect(() => {

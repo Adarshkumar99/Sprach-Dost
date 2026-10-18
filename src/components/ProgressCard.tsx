@@ -25,6 +25,7 @@ export default function ProgressCard() {
     { label: "Words learned", value: p.wordsLearned, icon: "📚" },
     { label: "Level", value: p.lastLevel, icon: "📈" },
   ];
+  const shields = p.freezes ?? 0;
 
   return (
     <div className="glass rounded-2xl p-5 w-full max-w-3xl mt-10">
@@ -36,6 +37,9 @@ export default function ProgressCard() {
             <div className="text-[11px] opacity-60">{s.label}</div>
           </div>
         ))}
+      </div>
+      <div className="text-[11px] opacity-60 mt-3 text-center">
+        🛡️ {shields} streak shield{shields === 1 ? "" : "s"} — auto-protects your streak if you miss a day. 1 new shield every Monday (max 2).
       </div>
     </div>
   );

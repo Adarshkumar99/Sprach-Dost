@@ -1,14 +1,27 @@
+"use client";
+
 import Link from "next/link";
 import Avatar from "@/components/Avatar";
 import ProgressCard from "@/components/ProgressCard";
 import AuthButton from "@/components/AuthButton";
 import WeeklyChallenges from "@/components/WeeklyChallenges";
+import Leaderboard from "@/components/Leaderboard";
+import WordOfTheDay from "@/components/WordOfTheDay";
+import { usePro } from "@/lib/usePro";
 
 export default function Practice() {
+  const { isPro } = usePro();
   return (
     <main className="flex flex-col min-h-screen items-center justify-center px-6 py-14">
       <Link href="/" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100">← Home</Link>
-      <div className="absolute top-6 right-6"><AuthButton /></div>
+      <div className="absolute top-6 right-6 flex items-center gap-3">
+        {!isPro && (
+          <Link href="/pro" className="text-xs font-extrabold german-gradient text-black px-3 py-1.5 rounded-full">
+            ✨ GO PRO
+          </Link>
+        )}
+        <AuthButton />
+      </div>
 
       <h1 className="text-3xl md:text-5xl font-extrabold text-center mb-3">
         Who do you want to practice with? 🤔
@@ -54,8 +67,8 @@ export default function Practice() {
           <div className="text-center sm:text-left flex-1">
             <div className="font-bold text-xl mb-1">Vocabulary Trainer — Flashcards + Spaced Repetition</div>
             <p className="text-sm opacity-70">
-              A1 (1,000) • A2 (1,500) • B1 (2,000) words with meanings & example sentences.
-              Cards come back right before you forget them — that&apos;s how they stick. 🔊 Audio for every word.
+              A1 → C1 words with meanings & example sentences.
+              Cards come back right before you forget them — that&#39;s how they stick. 🔊 Audio for every word.
               Continue where you left off — progress saves after every card.
             </p>
           </div>
@@ -68,10 +81,10 @@ export default function Practice() {
         >
           <div className="text-6xl">📐</div>
           <div className="text-center sm:text-left flex-1">
-            <div className="font-bold text-xl mb-1">Grammar Lessons — Goethe Syllabus A1•A2•B1</div>
+            <div className="font-bold text-xl mb-1">Grammar Lessons — Goethe Syllabus A1 → C1</div>
             <p className="text-sm opacity-70">
-              Every grammar topic from der/die/das to Konjunktiv II — short lesson in simple English,
-              then a hand-checked quiz. <b>1,000+ questions</b> with instant explanations.
+              Every grammar topic from der/die/das to Konjunktiv I — short lesson in simple English,
+              then a hand-checked quiz. Spaced repetition shows topics again right before you forget them.
             </p>
           </div>
           <span className="btn-primary text-sm whitespace-nowrap">Start learning →</span>
@@ -85,7 +98,7 @@ export default function Practice() {
           <div className="text-center sm:text-left flex-1">
             <div className="font-bold text-xl mb-1">Story Time — Read German with English underneath</div>
             <p className="text-sm opacity-70">
-              A1/A2/B1 short stories — every German paragraph has English right under it,
+              A1 → C1 short stories — every German paragraph has English right under it,
               then <b>vocab from the story + a comprehension quiz</b>. 🔊 audio per paragraph.
             </p>
           </div>
@@ -111,13 +124,58 @@ export default function Practice() {
         >
           <div className="text-5xl">🎓</div>
           <div className="text-center sm:text-left flex-1">
-            <div className="font-bold text-lg mb-1">Speaking Exam Simulator — Goethe style</div>
+            <div className="font-bold text-lg mb-1">Full Exam Simulator — Goethe · telc · ÖSD</div>
             <p className="text-sm opacity-70">
-              Hear the task → speak your German answer → instant keyword feedback per part.
-              Works without AI keys (browser mic + free voices).
+              Complete mock: Lesen • Hören • Schreiben • Sprechen, A1–B1. Lesen/Hören auto-scored,
+              Schreiben & Sprechen graded by the AI examiner with a CEFR rubric.
             </p>
           </div>
           <span className="btn-ghost text-sm whitespace-nowrap">Start exam →</span>
+        </Link>
+
+        <Link
+          href="/dictation"
+          className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-orange-400/50 transition-all"
+        >
+          <div className="text-5xl">🎧</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-lg mb-1">Diktat — Dictation Trainer</div>
+            <p className="text-sm opacity-70">
+              Hear a German sentence → type exactly what you hear. Trains listening + spelling together,
+              and feeds your spaced-repetition deck.
+            </p>
+          </div>
+          <span className="btn-ghost text-sm whitespace-nowrap">Start dictation →</span>
+        </Link>
+
+        <Link
+          href="/writing"
+          className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-lime-400/50 transition-all"
+        >
+          <div className="text-5xl">✍️</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-lg mb-1">Schreibtrainer — Writing Practice</div>
+            <p className="text-sm opacity-70">
+              Goethe-style email/postcard tasks A1–B1 — type your answer, get an AI examiner grade
+              (/15) with the corrected version.
+            </p>
+          </div>
+          <span className="btn-ghost text-sm whitespace-nowrap">Write now →</span>
+        </Link>
+
+        <Link
+          href="/mistakes"
+          className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-rose-400/50 transition-all"
+        >
+          <div className="text-5xl">📕</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-lg mb-1">Fehlerheft — Your Mistake Notebook</div>
+            <p className="text-sm opacity-70">
+              Every correction from Anna, Lehrer and the exam grader lands here automatically.
+              Review them, self-quiz with spaced repetition, mark them learned.
+            </p>
+          </div>
+          <span className="btn-ghost text-sm whitespace-nowrap">Review mistakes →</span>
         </Link>
 
         <Link
@@ -139,7 +197,9 @@ export default function Practice() {
         💡 Tip: For the best voice quality use Chrome or Edge, and allow microphone permission when asked.
       </p>
 
+      <WordOfTheDay />
       <WeeklyChallenges />
+      <Leaderboard />
       <ProgressCard />
     </main>
   );

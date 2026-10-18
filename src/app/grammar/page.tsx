@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { speakSmart, loadVoices } from "@/lib/speech";
 import { pushProgressToCloud } from "@/lib/supabase";
+import { gradeCard, getCardState } from "@/lib/srs";
 
 /* ───────── types ───────── */
 type GrammarQuestion = { q: string; options: string[]; answer: number; why?: string };
@@ -15,7 +16,7 @@ type View =
   | { name: "quiz"; topic: GrammarTopic; set: GrammarQuestion[] }
   | { name: "done"; topic: GrammarTopic; set: GrammarQuestion[]; correct: number };
 
-const LEVELS = ["A1", "A2", "B1"] as const;
+const LEVELS = ["A1", "A2", "B1", "B2", "C1"] as const;
 const QUIZ_SIZE = 20; // questions sampled per attempt from the topic's pool
 
 /* ───────── score storage (cloud sync comes with auth) ───────── */
@@ -35,9 +36,18 @@ function saveScore(level: string, topicId: string, correct: number, total: numbe
     localStorage.setItem(SCORE_KEY, JSON.stringify(s));
     pushProgressToCloud();
   }
+  // spaced repetition on the TOPIC: strong quizzes come back later, weak ones sooner
+  const pct = Math.round((correct / Math.max(1, total)) * 100);
+  gradeCard(`grammar|${key}`, pct >= 80 ? 5 : pct >= 60 ? 4 : pct >= 40 ? 3 : 1);
 }
 
 const scoreKey = (level: string, id: string) => `${level}|${id}`;
+
+/** is this topic due for a refresher? */
+function topicDue(level: string, id: string): boolean {
+  const st = getCardState(`grammar|${scoreKey(level, id)}`);
+  return st.due <= Date.now();
+}
 
 export default function GrammarPage() {
   const [level, setLevel] = useState<string>("A1");
@@ -102,6 +112,11 @@ export default function GrammarPage() {
 
   const doneCount = useMemo(
     () => topics.filter((t) => scores[scoreKey(level, t.id)]).length,
+    [topics, scores, level]
+  );
+
+  const dueCount = useMemo(
+    () => topics.filter((t) => scores[scoreKey(level, t.id)] && topicDue(level, t.id)).length,
     [topics, scores, level]
   );
 
@@ -247,7 +262,10 @@ export default function GrammarPage() {
         ))}
       </div>
 
-      <div className="text-xs opacity-60 mb-6">{doneCount}/{topics.length} topics attempted</div>
+      <div className="text-xs opacity-60 mb-6">
+        {doneCount}/{topics.length} topics attempted
+        {dueCount > 0 && <> • 🔁 <b className="text-amber-300">{dueCount}</b> due for review</>}
+      </div>
 
       {loading ? (
         <div className="opacity-60">Loading lessons…</div>
@@ -270,7 +288,7 @@ export default function GrammarPage() {
                 <div className="flex items-start justify-between gap-2">
                   <div className="font-bold text-sm leading-snug">{t.title}</div>
                   <div className="text-xs shrink-0">
-                    {best ? "✅" : "▫️"}
+                    {scores[scoreKey(level, t.id)] ? (topicDue(level, t.id) ? "🔁" : "✅") : "▫️"}
                   </div>
                 </div>
                 <div className="text-xs opacity-60 mt-2">

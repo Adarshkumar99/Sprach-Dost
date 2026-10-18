@@ -37,7 +37,7 @@ export default function WeeklyChallenges() {
           {done}/{total} done
         </div>
       </div>
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {GOALS.map((g) => {
           const cur = week[g.key as keyof WeeklyData] as number;
           const pct = Math.round((cur / g.target) * 100);
