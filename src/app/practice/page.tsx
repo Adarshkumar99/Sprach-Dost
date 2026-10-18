@@ -7,6 +7,7 @@ import AuthButton from "@/components/AuthButton";
 import WeeklyChallenges from "@/components/WeeklyChallenges";
 import Leaderboard from "@/components/Leaderboard";
 import WordOfTheDay from "@/components/WordOfTheDay";
+import WotDPushCard from "@/components/WotDPushCard";
 import { usePro } from "@/lib/usePro";
 
 export default function Practice() {
@@ -198,6 +199,7 @@ export default function Practice() {
       </p>
 
       <WordOfTheDay />
+      <WotDPushCard />
       <WeeklyChallenges />
       <Leaderboard />
       <ProgressCard />

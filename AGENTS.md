@@ -43,7 +43,11 @@ B2/C1 expansion. Commit when the user asks.
    `SUPABASE_SERVICE_ROLE_KEY` in Vercel env vars.
 3. Android: set `CAP_SERVER_URL` in `.env.local` → `npm run cap:sync` → `npm run cap:open`
    → build APK/AAB in Android Studio (Node >=22 needed for `cap` CLI:
-   `export PATH="$HOME/.nvm/versions/node/v24.19.0/bin:$PATH"`).
+   `export PATH="$HOME/.nvm/versions/node/v24.19.0/bin:$PATH"`). The real deployed URL is
+   unknown — `sprachdost.vercel.app` placeholder 404s; get it from the user's Vercel dashboard.
+4. Word-of-the-Day push: `npx web-push generate-vapid-keys` → set `NEXT_PUBLIC_VAPID_PUBLIC_KEY`,
+   `VAPID_PRIVATE_KEY`, `VAPID_CONTACT`, `CRON_SECRET` in Vercel. Cron is configured in
+   `vercel.json` (00:30 UTC = 06:00 IST) hitting `/api/push/cron`.
 
 ## Conventions
 - localStorage-first, Supabase `user_data` JSONB sync via `SYNC_KEYS` in `src/lib/supabase.ts`

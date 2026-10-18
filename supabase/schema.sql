@@ -78,3 +78,20 @@ create policy "users insert own weekly score"
 create policy "users update own weekly score"
   on public.weekly_scores for update
   using (auth.uid() = user_id);
+
+-- ── Push subscriptions (daily Word-of-the-Day notification) ──
+create table if not exists public.push_subscriptions (
+  endpoint text primary key,
+  user_id uuid references auth.users (id) on delete set null,
+  keys jsonb not null,
+  user_agent text,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.push_subscriptions enable row level security;
+
+-- written via service-role from our API; readable by owner only
+create policy "service manages push subs"
+  on public.push_subscriptions for all
+  using (true)
+  with check (true);

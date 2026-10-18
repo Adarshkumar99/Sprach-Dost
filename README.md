@@ -57,6 +57,7 @@ Most German learners in India complete months of coaching yet freeze when they h
 ### Word of the Day
 - A fresh word every day (IST), picked from the whole bank, with audio and example sentence
 - One tap to train it in the flashcard deck
+- **Push notification** every morning (6 AM IST) — VAPID web push via service worker + Vercel cron (`vercel.json`)
 
 ### Full Exam Simulator
 - **Goethe, telc and ÖSD formats** × A1/A2/B1 — a complete timed mock in one sitting
