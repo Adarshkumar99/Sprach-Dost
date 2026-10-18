@@ -10,6 +10,8 @@ import { speakSmart, stopSpeaking, listen, loadVoices, isSpeakingSupported, isEc
 import { parseReply, parseFeedback, type FeedbackReport } from "@/lib/parse";
 import { recordSession, countVocab } from "@/lib/progress";
 import { getStoredAvatar, storeAvatar, AVATARS } from "@/lib/avatars";
+import { getAccessToken } from "@/lib/supabase";
+import { addMistake } from "@/lib/mistakes";
 
 const LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const TOPIC_CHIPS = [
@@ -36,6 +38,7 @@ export default function LehrerPage() {
   const [listening, setListening] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [needsKey, setNeedsKey] = useState(false);
+  const [limitHit, setLimitHit] = useState(false);
   const [voiceOn, setVoiceOn] = useState(true);
   const [feedback, setFeedback] = useState<FeedbackReport | null>(null);
   const [textInput, setTextInput] = useState("");
@@ -141,9 +144,13 @@ export default function LehrerPage() {
 
   const callAI = useCallback(
     async (messages: { role: "user" | "assistant"; content: string }[], topicArg?: string) => {
+      const token = await getAccessToken().catch(() => null);
       const res = await fetch("/api/chat", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({
           mode: "lehrer",
           level,
@@ -169,6 +176,11 @@ export default function LehrerPage() {
     const data = await callAI([{ role: "user", content: startMsg }], chosen);
     setThinking(false);
 
+    if (data.limit) {
+      setNeedsKey(true);
+      setLimitHit(true);
+      return;
+    }
     if (data.offline || data.error || !data.reply) {
       setNeedsKey(true);
       return;
@@ -197,8 +209,13 @@ export default function LehrerPage() {
       try {
         const data = await callAI(newHistory);
         setThinking(false);
+        if (data.limit) {
+          setHint("Daily free limit reached — upgrade to Pro for unlimited practice (Home → Pricing).");
+          return;
+        }
         if (!data.reply) return;
         const parsed = parseReply(data.reply);
+        if (parsed.korrektur) addMistake({ wrong: clean, note: parsed.korrektur, context: `Lehrer — ${topic}` });
         setHistory([...newHistory, { role: "assistant", content: data.reply }]);
         setMsgs((m) => [...m, { role: "avatar", german: parsed.german, erklarung: parsed.erklarung, korrektur: parsed.korrektur }]);
         setHint(parsed.hint);
@@ -343,19 +360,35 @@ export default function LehrerPage() {
 
         {needsKey ? (
           <div className="glass rounded-3xl p-8 mt-6 w-full">
-            <h2 className="text-xl font-bold mb-3">⚡ Lehrer needs an AI brain — 2 minute setup (FREE)</h2>
-            <ol className="list-decimal list-inside space-y-2 text-sm opacity-90 leading-relaxed">
-              <li>Go to <a className="text-amber-400 underline" href="https://console.groq.com" target="_blank" rel="noreferrer">console.groq.com</a> → sign in with Google (free, no card)</li>
-              <li>"API Keys" → "Create API Key" → copy it</li>
-              <li>In the project folder, create a file <code className="bg-white/10 px-2 py-0.5 rounded">.env.local</code> containing:<br />
-                <code className="bg-white/10 px-2 py-0.5 rounded block mt-1">GROQ_API_KEY=gsk_your_key_here</code></li>
-              <li>Restart: <code className="bg-white/10 px-2 py-0.5 rounded">npm run dev</code></li>
-            </ol>
-            <p className="text-xs opacity-60 mt-4">Free tier: thousands of requests per day, no credit card. Anna&apos;s café demo works without any key.</p>
-            <div className="flex gap-3 mt-6">
-              <Link href="/practice/anna" className="btn-primary text-sm">Try Anna (offline demo) →</Link>
-              <button onClick={() => setNeedsKey(false)} className="btn-ghost text-sm">← Pick a topic</button>
-            </div>
+            {limitHit ? (
+              <>
+                <h2 className="text-xl font-bold mb-3">🚦 Daily free limit reached</h2>
+                <p className="text-sm opacity-90 leading-relaxed">
+                  You've used up today's free AI lessons. Come back tomorrow — or upgrade to Pro
+                  for unlimited practice, exam grading and more.
+                </p>
+                <div className="flex gap-3 mt-6">
+                  <Link href="/pro" className="btn-primary text-sm">✨ See Pro →</Link>
+                  <button onClick={() => { setNeedsKey(false); setLimitHit(false); }} className="btn-ghost text-sm">← Pick a topic</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-xl font-bold mb-3">⚡ Lehrer needs an AI brain — 2 minute setup (FREE)</h2>
+                <ol className="list-decimal list-inside space-y-2 text-sm opacity-90 leading-relaxed">
+                  <li>Go to <a className="text-amber-400 underline" href="https://console.groq.com" target="_blank" rel="noreferrer">console.groq.com</a> → sign in with Google (free, no card)</li>
+                  <li>"API Keys" → "Create API Key" → copy it</li>
+                  <li>In the project folder, create a file <code className="bg-white/10 px-2 py-0.5 rounded">.env.local</code> containing:<br />
+                    <code className="bg-white/10 px-2 py-0.5 rounded block mt-1">GROQ_API_KEY=gsk_your_key_here</code></li>
+                  <li>Restart: <code className="bg-white/10 px-2 py-0.5 rounded">npm run dev</code></li>
+                </ol>
+                <p className="text-xs opacity-60 mt-4">Free tier: thousands of requests per day, no credit card. Anna's café demo works without any key.</p>
+                <div className="flex gap-3 mt-6">
+                  <Link href="/practice/anna" className="btn-primary text-sm">Try Anna (offline demo) →</Link>
+                  <button onClick={() => setNeedsKey(false)} className="btn-ghost text-sm">← Pick a topic</button>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <>

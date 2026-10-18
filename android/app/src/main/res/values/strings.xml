@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SprachDost</string>
+    <string name="title_activity_main">SprachDost</string>
+    <string name="package_name">com.sprachdost.app</string>
+    <string name="custom_url_scheme">com.sprachdost.app</string>
+</resources>
