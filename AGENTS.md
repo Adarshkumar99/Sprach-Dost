@@ -35,19 +35,30 @@ streak shields + IST fix, leaderboard, dictation, career packs, branching storie
 Stripe Pro, Capacitor android/ wrapper, Fehlerheft, Schreibtrainer, Word of the Day, grammar SRS,
 B2/C1 expansion. Commit when the user asks.
 
-## Setup the user still has to do manually
-1. Re-run `supabase/schema.sql` in Supabase SQL Editor (adds profiles, weekly_scores,
-   stripe_customer_id — idempotent).
-2. Stripe dashboard: create product + ₹500/mo price → `STRIPE_PRICE_ID`; webhook endpoint
-   `/api/stripe/webhook` → `STRIPE_WEBHOOK_SECRET`; add `STRIPE_SECRET_KEY` +
-   `SUPABASE_SERVICE_ROLE_KEY` in Vercel env vars.
-3. Android: set `CAP_SERVER_URL` in `.env.local` → `npm run cap:sync` → `npm run cap:open`
-   → build APK/AAB in Android Studio (Node >=22 needed for `cap` CLI:
-   `export PATH="$HOME/.nvm/versions/node/v24.19.0/bin:$PATH"`). The real deployed URL is
-   unknown — `sprachdost.vercel.app` placeholder 404s; get it from the user's Vercel dashboard.
-4. Word-of-the-Day push: `npx web-push generate-vapid-keys` → set `NEXT_PUBLIC_VAPID_PUBLIC_KEY`,
-   `VAPID_PRIVATE_KEY`, `VAPID_CONTACT`, `CRON_SECRET` in Vercel. Cron is configured in
-   `vercel.json` (00:30 UTC = 06:00 IST) hitting `/api/push/cron`.
+## Setup status (updated 2026-10-20)
+DONE:
+- Supabase schema applied via psql (profiles, weekly_scores, push_subscriptions, user_data all live).
+- Vercel linked to `sprach-dost` → https://sprach-dost.vercel.app; production env set:
+  GROQ_API_KEY, STRIPE_SECRET_KEY (user-added, mode unknown), NEXT_PUBLIC_SITE_URL,
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_CONTACT, CRON_SECRET.
+- CAP_SERVER_URL set locally + android config synced to https://sprach-dost.vercel.app.
+
+STILL BLOCKED — needs user action (last 2 items):
+1. **Supabase API keys** (auth + sync + webhook + push are OFF on the deployed site without
+   them): add to Vercel production env → `NEXT_PUBLIC_SUPABASE_URL` (= https://gaokxpbzteagtznwmeiu.supabase.co),
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (Dashboard → Settings → API).
+   Easiest: user runs `npx supabase login` and tells the agent — keys fetchable via
+   Management API. Then redeploy.
+2. **Stripe LIVE mode**: the CLI's restricted key (rk_live) lacks product_write on live.
+   Either (a) user enables Products/Prices/Webhooks write on that restricted key at
+   https://dashboard.stripe.com/b/acct_1OOj5PSBluYB7xx0/apikeys (key mk_1USkIwSBluYB7xx0CWotMmju),
+   or (b) user pastes the full `sk_live_...` into `.env.local` as STRIPE_SECRET_KEY.
+   Then agent creates live product + ₹500/mo price + webhook endpoint and sets
+   `STRIPE_PRICE_ID` + `STRIPE_WEBHOOK_SECRET` in Vercel + verifies the deployed key's mode.
+   (Test-mode product prod_VThniuf2dHGevP + price_1USkOnSBluYB7xx066VnVwLy exist for testing.)
+3. Android: SDK NOT installed on this machine → APK/AAB build happens in Android Studio
+   (Node >=22 needed for `cap` CLI:
+   `export PATH="$HOME/.nvm/versions/node/v24.19.0/bin:$PATH"`, then `npm run cap:open`).
 
 ## Conventions
 - localStorage-first, Supabase `user_data` JSONB sync via `SYNC_KEYS` in `src/lib/supabase.ts`
