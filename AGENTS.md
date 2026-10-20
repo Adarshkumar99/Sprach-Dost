@@ -43,20 +43,21 @@ DONE:
   NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_CONTACT, CRON_SECRET.
 - CAP_SERVER_URL set locally + android config synced to https://sprach-dost.vercel.app.
 
-STILL BLOCKED — needs user action (last 2 items):
-1. **Supabase API keys** (auth + sync + webhook + push are OFF on the deployed site without
-   them): add to Vercel production env → `NEXT_PUBLIC_SUPABASE_URL` (= https://gaokxpbzteagtznwmeiu.supabase.co),
+STILL BLOCKED — needs user action (ONE item left):
+1. **Supabase API keys** — the ONLY remaining blocker. Auth + sync + leaderboard + Stripe
+   checkout + push cron are all OFF on the deployed site without them. Add to Vercel
+   production env → `NEXT_PUBLIC_SUPABASE_URL` (= https://gaokxpbzteagtznwmeiu.supabase.co),
    `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (Dashboard → Settings → API).
    Easiest: user runs `npx supabase login` and tells the agent — keys fetchable via
-   Management API. Then redeploy.
-2. **Stripe LIVE mode**: the CLI's restricted key (rk_live) lacks product_write on live.
-   Either (a) user enables Products/Prices/Webhooks write on that restricted key at
-   https://dashboard.stripe.com/b/acct_1OOj5PSBluYB7xx0/apikeys (key mk_1USkIwSBluYB7xx0CWotMmju),
-   or (b) user pastes the full `sk_live_...` into `.env.local` as STRIPE_SECRET_KEY.
-   Then agent creates live product + ₹500/mo price + webhook endpoint and sets
-   `STRIPE_PRICE_ID` + `STRIPE_WEBHOOK_SECRET` in Vercel + verifies the deployed key's mode.
-   (Test-mode product prod_VThniuf2dHGevP + price_1USkOnSBluYB7xx066VnVwLy exist for testing.)
-3. Android: SDK NOT installed on this machine → APK/AAB build happens in Android Studio
+   Management API. Then agent sets the vars + redeploys + end-to-end tests.
+2. **Stripe TEST mode is fully configured**: price_1USkOnSBluYB7xx066VnVwLy (₹500/mo test) +
+   webhook we_1USkehSBluYB7xx0530f4L6e (secret in Vercel). Checkout works as soon as Supabase
+   keys land. CAVEAT: the user's STRIPE_SECRET_KEY on Vercel is mode-unknown — if checkout
+   errors with "No such price", replace it with the test secret key (sk_test_...).
+3. **Stripe LIVE mode** (when ready for real payments): user enables Products/Prices/Webhooks
+   write on the restricted CLI key (mk_1USkIwSBluYB7xx0CWotMmju) or pastes sk_live_ into
+   .env.local → then agent creates live product+price+webhook and swaps the 3 env vars.
+4. Android: SDK NOT installed on this machine → APK/AAB build happens in Android Studio
    (Node >=22 needed for `cap` CLI:
    `export PATH="$HOME/.nvm/versions/node/v24.19.0/bin:$PATH"`, then `npm run cap:open`).
 
