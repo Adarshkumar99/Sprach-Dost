@@ -44,16 +44,12 @@ DONE:
 - CAP_SERVER_URL set locally + android config synced to https://sprach-dost.vercel.app.
 
 STILL BLOCKED — needs user action (ONE item left):
-1. **Supabase API keys** — the ONLY remaining blocker. Auth + sync + leaderboard + Stripe
-   checkout + push cron are all OFF on the deployed site without them. Add to Vercel
-   production env → `NEXT_PUBLIC_SUPABASE_URL` (= https://gaokxpbzteagtznwmeiu.supabase.co),
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (Dashboard → Settings → API).
-   Easiest: user runs `npx supabase login` and tells the agent — keys fetchable via
-   Management API. Then agent sets the vars + redeploys + end-to-end tests.
-2. **Stripe TEST mode is fully configured**: price_1USkOnSBluYB7xx066VnVwLy (₹500/mo test) +
-   webhook we_1USkehSBluYB7xx0530f4L6e (secret in Vercel). Checkout works as soon as Supabase
-   keys land. CAVEAT: the user's STRIPE_SECRET_KEY on Vercel is mode-unknown — if checkout
-   errors with "No such price", replace it with the test secret key (sk_test_...).
+1. ~~Supabase API keys~~ DONE (2026-10-20): fetched via Management API (`npx supabase projects
+   api-keys`), set in Vercel production + local .env.local. Auth verified live; push cron works.
+2. **Stripe TEST mode is LIVE and fully verified end-to-end** (2026-10-20): signup → checkout
+   session (cs_test_...) → signed webhook → profiles.is_pro=true. Test product
+   prod_VThniuf2dHGevP, price_1USkOnSBluYB7xx066VnVwLy (₹500/mo), webhook
+   we_1USkehSBluYB7xx0530f4L6e. Vercel STRIPE_SECRET_KEY confirmed TEST mode (cs_test session).
 3. **Stripe LIVE mode** (when ready for real payments): user enables Products/Prices/Webhooks
    write on the restricted CLI key (mk_1USkIwSBluYB7xx0CWotMmju) or pastes sk_live_ into
    .env.local → then agent creates live product+price+webhook and swaps the 3 env vars.

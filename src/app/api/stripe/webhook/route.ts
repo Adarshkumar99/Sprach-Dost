@@ -31,8 +31,12 @@ async function setPro(uid: string, isPro: boolean, customerId?: string) {
   }
   const patch: Record<string, unknown> = { is_pro: isPro };
   if (customerId) patch.stripe_customer_id = customerId;
-  const { error } = await sb.from("profiles").update(patch).eq("id", uid);
-  if (error) console.error("webhook: profile update failed:", error.message);
+  // upsert (not update): the webhook can fire before the user's first app login
+  const { error } = await sb.from("profiles").upsert(patch ? { id: uid, ...patch } : { id: uid }, {
+    onConflict: "id",
+    ignoreDuplicates: false,
+  });
+  if (error) console.error("webhook: profile upsert failed:", error.message);
 }
 
 export async function POST(req: Request) {
