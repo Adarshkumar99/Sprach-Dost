@@ -156,7 +156,7 @@ Rules:
         body: JSON.stringify({
           model,
           temperature: 0.8,
-          max_completion_tokens: 4096,
+          max_completion_tokens: 6144,
           messages: [{ role: "user", content: prompt }],
         }),
       });
