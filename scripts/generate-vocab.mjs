@@ -49,9 +49,29 @@ const TARGETS = {
   A1: Number(process.env.TARGET_A1 ?? 1000),
   A2: Number(process.env.TARGET_A2 ?? 1500),
   B1: Number(process.env.TARGET_B1 ?? 2000),
-  B2: Number(process.env.TARGET_B2 ?? 1200),
-  C1: Number(process.env.TARGET_C1 ?? 800),
+  B2: Number(process.env.TARGET_B2 ?? 1500),
+  C1: Number(process.env.TARGET_C1 ?? 1500),
 };
+
+/* cross-level dedupe: no German word may repeat across ANY level (incl. the TS seed).
+   normalized key: lowercase, strip leading article, punctuation-free */
+const LEVEL_FILES = ["A1", "A2", "B1", "B2", "C1"];
+function normKey(de) {
+  return String(de)
+    .toLowerCase()
+    .replace(/^(der|die|das|ein|eine|einen|einem|einer|eines)\s+/, "")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+function extractSeedWords(seedFile) {
+  const out = new Set();
+  try {
+    const src = fs.readFileSync(seedFile, "utf-8");
+    for (const m of src.matchAll(/w\("([^"]+)"/g)) out.add(normKey(m[1]));
+  } catch { /* no seed file */ }
+  return out;
+}
 
 // fine-grained topic lists (generator cycles through until target reached)
 const TOPICS = {
@@ -169,19 +189,58 @@ async function main() {
   const outDir = path.join(ROOT, "public", "vocab");
   fs.mkdirSync(outDir, { recursive: true });
 
-  for (const level of ["A1", "A2", "B1", "B2", "C1"]) {
+  /* ── global cross-level registry (all 5 files + TS seed) ── */
+  const globalSeen = extractSeedWords(path.join(ROOT, "src", "lib", "vocab.ts"));
+  console.log(`seed words in registry: ${globalSeen.size}`);
+
+  const files = {};
+  const preCounts = {};
+  for (const level of LEVEL_FILES) {
     const file = path.join(outDir, `${level}.json`);
     let existing = [];
     if (fs.existsSync(file)) {
       try { existing = JSON.parse(fs.readFileSync(file, "utf-8")); } catch { existing = []; }
     }
-    const seen = new Set(existing.map((w) => String(w.de).toLowerCase()));
+    preCounts[level] = existing.length;
+    files[level] = existing;
+  }
+
+  /* DEDUPE=1 → retro-clean: keep each word in the LOWEST level, drop later duplicates */
+  if (process.env.DEDUPE === "1") {
+    console.log("\n🧹 retro-dedupe pass (keeping first occurrence per word)…");
+    for (const level of LEVEL_FILES) {
+      const before = files[level].length;
+      files[level] = files[level].filter((w) => {
+        const k = normKey(w.de);
+        if (globalSeen.has(k)) return false;
+        globalSeen.add(k);
+        return true;
+      });
+      const removed = before - files[level].length;
+      if (removed) {
+        fs.writeFileSync(path.join(outDir, `${level}.json`), JSON.stringify(files[level], null, 0));
+        console.log(`  ${level}: -${removed} duplicates (kept in a lower level)`);
+      }
+    }
+  }
+
+  /* register everything that survived */
+  for (const level of LEVEL_FILES) {
+    for (const w of files[level]) globalSeen.add(normKey(w.de));
+  }
+
+  for (const level of LEVEL_FILES) {
+    const file = path.join(outDir, `${level}.json`);
+    const existing = files[level];
+    const seen = new Set(existing.map((w) => normKey(w.de)));
     const target = TARGETS[level];
     console.log(`\n=== ${level}: have ${existing.length}, target ${target} ===`);
     if (existing.length >= target) { console.log("done already ✅"); continue; }
 
     let ti = 0;
-    while (seen.size < target) {
+    let guard = 0;
+    while (seen.size < target && guard < target * 2) {
+      guard++;
       const topic = TOPICS[level][ti % TOPICS[level].length];
       ti++;
       const avoid = existing.slice(-40).map((w) => w.de).join(", ");
@@ -194,8 +253,9 @@ async function main() {
         const de = String(it.de ?? "").trim();
         const en = String(it.en ?? "").trim();
         if (!de || !en) continue;
-        const k = de.toLowerCase();
-        if (seen.has(k)) continue;
+        const k = normKey(de);
+        if (globalSeen.has(k) || seen.has(k)) continue; // no repeats across ANY level
+        globalSeen.add(k);
         seen.add(k);
         existing.push({
           de,

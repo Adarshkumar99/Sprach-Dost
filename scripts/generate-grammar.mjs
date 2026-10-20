@@ -210,7 +210,7 @@ const TOPICS = {
   ],
 };
 
-const TARGET_QUESTIONS = Number(process.env.TARGET_QUESTIONS ?? 300);
+const TARGET_QUESTIONS = Number(process.env.TARGET_QUESTIONS ?? 400);
 const BATCH = 20; // questions per API call (token-safe)
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

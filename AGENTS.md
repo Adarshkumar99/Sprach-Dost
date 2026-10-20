@@ -17,17 +17,21 @@ Generators (scripts/*.mjs) share one free daily token budget and die quietly whe
 They are all **resumable** — re-running fills the gaps, never duplicates. After a rate-limit
 exhaustion, RE-RUN the following on the next day (budget resets ~24h later) until output is complete:
 
-- [ ] B2 grammar: 24/30 topics (missing: word-order-nachfeld, wortstellung-nachfeld etc. — re-run fills)
-      → `ONLY_LEVEL=B2 TARGET_QUESTIONS=40 node scripts/generate-grammar.mjs`
-- [ ] C1 grammar: 7/30 topics (modalpartikel-c1 is short at 20/40)
-      → `ONLY_LEVEL=C1 TARGET_QUESTIONS=40 node scripts/generate-grammar.mjs`
-- [ ] B2 stories: 0/30 → `TARGET_A1=0 TARGET_A2=0 TARGET_B1=0 TARGET_B2=30 TARGET_C1=20 node scripts/generate-stories.mjs`
-- [ ] C1 stories: 0/20 (same command as above)
-- [ ] B2 vocab at 321/1200, C1 at 226/800 (nice-to-have; daily CI also tops up)
-      → `TARGET_A1=0 TARGET_A2=0 TARGET_B1=0 TARGET_B2=1200 TARGET_C1=800 node scripts/generate-vocab.mjs`
+**Targets (user-approved 2026-10-21):** vocab B2/C1 = 1500 each (zero cross-level repeats,
+normalized dedupe incl. article-stripping + TS seed), grammar = 400 questions/topic on ALL
+levels (A1–C1), stories = 100 per level, B2/C1 stories 25–30 paragraphs.
 
+- [ ] Vocab refill after dedupe pass (A1 ~870/1000, A2 ~1118/1500, B1 ~1573/2000, B2/C1 → 1500)
+      → `node scripts/generate-vocab.mjs`
+- [ ] A2/B1 stories to 100; B2/C1 stories 0→100 (25-30 paras each, 1 story/call)
+      → `node scripts/generate-stories.mjs`
+- [ ] Grammar to 400/topic everywhere (A2/B1 at 12/topic, B2 24/30 topics, C1 19/30)
+      → `node scripts/generate-grammar.mjs`
+
+Estimated free-tier fill time: vocab ~2-3 days, stories ~2-3 days, grammar ~2-4 weeks.
 The GitHub Actions workflow (`.github/workflows/daily-content.yml`, 06:00 UTC daily) tops up
 everything automatically — locally you only need to re-run if you want content sooner.
+If the user buys Groq Developer tier, a single full run can finish grammar in one day.
 
 ## Uncommitted work (as of 2026-10-18)
 Phases 1–6 are implemented but NOT committed: exam cluster (Goethe/telc/ÖSD + AI grading),

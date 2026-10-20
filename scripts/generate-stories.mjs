@@ -54,10 +54,13 @@ const TARGETS = {
   A1: Number(process.env.TARGET_A1 ?? 100),
   A2: Number(process.env.TARGET_A2 ?? 100),
   B1: Number(process.env.TARGET_B1 ?? 100),
-  B2: Number(process.env.TARGET_B2 ?? 60),
-  C1: Number(process.env.TARGET_C1 ?? 40),
+  B2: Number(process.env.TARGET_B2 ?? 100),
+  C1: Number(process.env.TARGET_C1 ?? 100),
 };
-const BATCH = 4; // stories per API call (token-safe for longer text)
+// B2/C1 stories are long (25-30 paragraphs) → one story per API call
+const BATCH = 4;
+const longStory = (level) => level === "B2" || level === "C1";
+const batchSize = (level) => (longStory(level) ? 1 : BATCH);
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const deadToday = new Set();
@@ -104,19 +107,26 @@ async function genBatch(level, theme, existingTitles) {
     A1: "short very simple sentences, A1 vocabulary only",
     A2: "simple past and present, A2 vocabulary",
     B1: "connected narrative, B1 vocabulary with opinion words",
-    B2: "nuanced narrative with subordinate clauses, B2 vocabulary, some opinions & indirect speech",
+    B2: "nuanced narrative with subordinate clauses, B2 vocabulary, opinions & indirect speech",
     C1: "sophisticated narrative, C1 vocabulary, idiomatic expressions, complex sentence structure",
   }[level];
   const sample = [...existingTitles].slice(-8).join(", ") || "(none)";
-  const prompt = `Write ${BATCH} short German stories for CEFR level ${level}, theme: "${theme}" (${pLevel}).
+  const n = batchSize(level);
+  const paraSpec = longStory(level)
+    ? `"paragraphs": [
+    {"de": "1-2 sentences of German", "en": "English translation"}
+  ],   // EXACTLY 25-30 paragraphs — a long, complete story with scenes, dialogue and development`
+    : `"paragraphs": [
+    {"de": "1-3 sentences of German", "en": "English translation"}
+  ],   // 6-10 paragraphs — story should feel complete, about 12-18 lines total`;
+  const minParas = longStory(level) ? 22 : 5;
+  const prompt = `Write ${n} short German stor${n === 1 ? "y" : "ies"} for CEFR level ${level}, theme: "${theme}" (${pLevel}).
 
 Each story object must be:
 {
   "id": "kebab-case-slug",
   "title": "short German title",
-  "paragraphs": [
-    {"de": "1-3 sentences of German", "en": "English translation"}
-  ],   // 6-10 paragraphs — story should feel complete, about 12-18 lines total
+  ${paraSpec}
   "vocab": [
     {"de": "word with article if noun", "en": "meaning"}
   ],   // 8-12 key words actually used in the story
@@ -133,10 +143,10 @@ Each story object must be:
 Rules:
 - German 100% correct and natural for level ${level}.
 - Stories should feel warm and real — everyday texture (chai, trains, rain, WhatsApp calls home, Goethe-Institut, Sachertorte) mixed with a touch of fun.
-- Titles must not repeat these already used: ${sample}
-- Return ONLY a valid JSON array of ${BATCH} story objects.`;
+${longStory(level) ? "- THIS IS A LONG STORY: it MUST have 25-30 paragraphs. Give it a real arc: setup → complication → turning point → resolution.\n" : ""}- Titles must not repeat these already used: ${sample}
+- Return ONLY a valid JSON array of ${n} story object${n === 1 ? "" : "s"}.`;
 
-  const data = await callGroq(prompt, 5500);
+  const data = await callGroq(prompt, longStory(level) ? 9000 : 5500);
   const content = data?.choices?.[0]?.message?.content ?? "";
   const match = content.match(/\[[\s\S]*\]/);
   if (!match) return null;
@@ -145,7 +155,7 @@ Rules:
     if (!Array.isArray(arr) || arr.length === 0) return null;
     return arr.filter((s) =>
       s && typeof s.id === "string" && typeof s.title === "string" &&
-      Array.isArray(s.paragraphs) && s.paragraphs.length >= 5 &&
+      Array.isArray(s.paragraphs) && s.paragraphs.length >= minParas &&
       Array.isArray(s.vocab) && s.vocab.length >= 6 &&
       Array.isArray(s.questions) && s.questions.length === 5 &&
       s.questions.every((q) => q.q && Array.isArray(q.options) && q.options.length === 4 &&
@@ -173,7 +183,7 @@ async function main() {
 
     let guard = 0;
     let themeIdx = 0;
-    while (stories.length < target && guard < 40) {
+    while (stories.length < target && guard < Math.max(60, target * 2)) {
       guard++;
       const theme = THEMES[themeIdx % THEMES.length];
       themeIdx++;
