@@ -198,11 +198,36 @@ export default function Home() {
         <WaitlistForm />
       </section>
 
+      {/* FREE LEARNING RESOURCES (SEO) */}
+      <section className="px-6 md:px-12 xl:px-24 py-14 border-t border-white/10">
+        <h2 className="text-2xl font-bold mb-6 text-center">Free German learning resources</h2>
+        <div className="grid sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          <Link href="/woerterbuch" className="glass rounded-2xl p-5 hover:border-amber-400/40 transition-all">
+            <div className="font-bold mb-1">📚 German Vocabulary A1–C1</div>
+            <p className="text-xs opacity-60">Every word with article, meaning & example — listen free.</p>
+          </Link>
+          <Link href="/grammatik" className="glass rounded-2xl p-5 hover:border-amber-400/40 transition-all">
+            <div className="font-bold mb-1">📐 Grammar Lessons A1–C1</div>
+            <p className="text-xs opacity-60">Goethe syllabus explained in simple English + practice questions.</p>
+          </Link>
+          <Link href="/lesen" className="glass rounded-2xl p-5 hover:border-amber-400/40 transition-all">
+            <div className="font-bold mb-1">📖 Reading Practice</div>
+            <p className="text-xs opacity-60">Short German stories with English under every line.</p>
+          </Link>
+        </div>
+      </section>
+
       {/* FOOTER */}
       <footer className="mt-auto border-t border-white/10 px-6 md:px-12 py-8 flex flex-col md:flex-row items-center justify-between gap-3 text-sm opacity-60">
         <div>
           <span className="text-amber-400 font-bold">Sprach</span>
           <span className="text-red-500 font-bold">Dost</span> — your German speaking partner
+        </div>
+        <div className="flex gap-4">
+          <Link href="/grammatik" className="hover:text-amber-400">Grammar</Link>
+          <Link href="/woerterbuch" className="hover:text-amber-400">Vocabulary</Link>
+          <Link href="/lesen" className="hover:text-amber-400">Stories</Link>
+          <Link href="/pro" className="hover:text-amber-400">Pro</Link>
         </div>
         <div>Built with ❤️ for German learners • A1–C2 • Goethe ready</div>
       </footer>

@@ -65,11 +65,9 @@ Most German learners in India complete months of coaching yet freeze when they h
 - Every mock: Lesen (reading MCQs) + Hören (TTS audio, max 3 replays) auto-scored; Schreiben + Sprechen graded by an AI examiner (score /15, corrected text, rubric 1–5 + CEFR estimate)
 - Per-test best scores + attempt history saved locally and synced when logged in
 
-### Analytics
-- **Goethe-style full mock exams**: Lesen (MCQ) + Hören (TTS audio) + Schreiben (AI /15) + Sprechen (AI rubric) — 50 different tests per level (A1, A2, B1, B2)
-- Pick any test or go random; per-test best scores saved, weak tests easy to retry
-- Tests 1–10 free, 11–50 Pro ✨ (fixed Modelltests stay free for everyone)
-- Content generated incrementally — fills up daily via CI
+### Shareable score cards
+- After any mock: "Share your score" → public `/r/<id>` page with a branded card + dynamic OG image
+- WhatsApp/Twitter previews show the score card itself — every share brings new visitors
 
 ### Analytics
 - **Exam readiness %** + skill-wise trend charts (Lesen/Hören/Schreiben/Sprechen)
@@ -77,6 +75,12 @@ Most German learners in India complete months of coaching yet freeze when they h
 
 ### Grammar Review Session
 - SRS-driven 10-minute refresher: due topics → lesson recap → mixed questions → re-graded
+
+### Public SEO pages (10,000+ indexable)
+- **/woerterbuch** — every vocab word (A1–C1) with article, meaning, example + audio (on-demand ISR)
+- **/grammatik** — all grammar lessons with interactive question teasers
+- **/lesen** — every story's first lines free with audio, full story in the app
+- Auto `sitemap.xml` + `robots.txt`; internal linking + register CTAs everywhere
 
 ### Pronunciation Trainer
 - Listen → repeat → instant ✅/🔁 feedback with streak tracking, powered by the same Web Speech API (English/German aware)

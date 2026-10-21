@@ -95,3 +95,20 @@ create policy "service manages push subs"
   on public.push_subscriptions for all
   using (true)
   with check (true);
+
+-- ── Shared exam results (public score cards: /r/<id>) ──
+create table if not exists public.shared_results (
+  id text primary key,
+  data jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+alter table public.shared_results enable row level security;
+
+create policy "public read shared results"
+  on public.shared_results for select
+  using (true);
+
+create policy "anyone can share results"
+  on public.shared_results for insert
+  with check (true);

@@ -135,6 +135,11 @@ export default function ExamPage() {
 
   const [partPct, setPartPct] = useState<Record<number, number>>({});
   const [elapsed, setElapsed] = useState(0);
+  const [shareState, setShareState] = useState<{ busy: boolean; url: string | null; error: string | null }>({
+    busy: false,
+    url: null,
+    error: null,
+  });
   const startedAt = useRef<number>(0);
   const savedRef = useRef(false);
 
@@ -391,6 +396,51 @@ ${written.trim()}`;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
+  const shareResult = useCallback(async () => {
+    setShareState({ busy: true, url: null, error: null });
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? window.location.origin;
+      const res = await fetch("/api/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          overall,
+          level: activeLevel,
+          label: examLabel,
+          perPart: results,
+          rubric: speaking.rubric
+            ? {
+                fluency: parseRatingOutOf5(speaking.rubric.fluency) ?? 0,
+                vocab: parseRatingOutOf5(speaking.rubric.vocab) ?? 0,
+                accuracy: parseRatingOutOf5(speaking.rubric.accuracy) ?? 0,
+                pronunciation: parseRatingOutOf5(speaking.rubric.pronunciation) ?? 0,
+                cefr: speaking.rubric.cefr,
+              }
+            : undefined,
+          name: "A German Learner",
+        }),
+      });
+      const data = await res.json();
+      if (!data.id) {
+        setShareState({ busy: false, url: null, error: data.error ?? "Could not create share link." });
+        return;
+      }
+      const url = `${siteUrl}/r/${data.id}`;
+      setShareState({ busy: false, url, error: null });
+      if (navigator.share) {
+        await navigator.share({
+          title: `I scored ${overall}% on ${examLabel} 🇩🇪`,
+          text: `Can you beat ${overall}%? Free German practice with AI avatars.`,
+          url,
+        }).catch(() => { /* user cancelled */ });
+      } else {
+        await navigator.clipboard.writeText(url).catch(() => {});
+      }
+    } catch {
+      setShareState({ busy: false, url: null, error: "Network error — try again." });
+    }
+  }, [overall, activeLevel, examLabel, results, speaking.rubric]);
+
   /* ─── setup ─── */
   if (phase === "setup" || !parts || !part) {
     const format = exam?.format ?? EXAMS[0];
@@ -591,6 +641,19 @@ ${written.trim()}`;
             {speaking.rubric.cefr && <p className="text-xs opacity-70 mt-1">Estimated level: {speaking.rubric.cefr}</p>}
           </div>
         )}
+        <div className="glass rounded-2xl w-full p-5 mb-6 border border-amber-400/30">
+          <div className="font-bold mb-2">📤 Share your score</div>
+          {shareState.url ? (
+            <p className="text-sm opacity-80 break-all">{shareState.url}</p>
+          ) : (
+            <button onClick={shareResult} disabled={shareState.busy} className="btn-ghost text-sm !py-2.5 !px-6 disabled:opacity-50">
+              {shareState.busy ? "Creating link…" : "Create share link →"}
+            </button>
+          )}
+          {shareState.error && <p className="text-xs text-yellow-400/90 mt-2">{shareState.error}</p>}
+          {shareState.url && <p className="text-xs opacity-60 mt-2">Link copied/shared — friends can beat your score on /r page.</p>}
+        </div>
+
         <div className="flex gap-3">
           <button onClick={startExam} className="btn-primary !px-6 text-sm">
             🔁 Try again
