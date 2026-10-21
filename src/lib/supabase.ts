@@ -60,7 +60,11 @@ export function onAuthChange(cb: (user: User | null) => void) {
 export async function signUpWithEmail(email: string, password: string) {
   const sb = getSupabase();
   if (!sb) return { error: "Auth is not configured yet." };
-  const { error } = await sb.auth.signUp({ email, password });
+  const { error } = await sb.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: `${window.location.origin}/practice` },
+  });
   return { error: error?.message ?? null };
 }
 
