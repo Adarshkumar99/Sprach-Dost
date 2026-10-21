@@ -27,6 +27,8 @@ levels (A1–C1), stories = 100 per level, B2/C1 stories 25–30 paragraphs.
       → `node scripts/generate-stories.mjs`
 - [ ] Grammar to 400/topic everywhere (A2/B1 at 12/topic, B2 24/30 topics, C1 19/30)
       → `node scripts/generate-grammar.mjs`
+- [ ] Test series to 50/level (A1–B2, Goethe format) → `public/tests/<LEVEL>.json`
+      → `node scripts/generate-tests.mjs` (UI done: 10 free + Pro, per-test best scores)
 
 Estimated free-tier fill time: vocab ~2-3 days, stories ~2-3 days, grammar ~2-4 weeks.
 The GitHub Actions workflow (`.github/workflows/daily-content.yml`, 06:00 UTC daily) tops up
