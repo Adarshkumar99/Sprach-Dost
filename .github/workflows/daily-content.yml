@@ -31,6 +31,7 @@ jobs:
       - name: Run content generators
         run: |
           npm run gen:all || true   # scripts exit 0/1 depending on top-ups; never fail the job
+          npm run gen:tests || true # test series (50/level) — token-heavy, fills daily
         timeout-minutes: 110
 
       - name: Commit + push if content changed
@@ -38,7 +39,7 @@ jobs:
           git config user.name "sprachdost-bot"
           git config user.email "bot@sprachdost.local"
           npm run gen:branches || true   # top up any missing branching graphs
-          git add public/vocab public/grammar public/stories src/lib/branches.generated.ts
+          git add public/vocab public/grammar public/stories public/tests src/lib/branches.generated.ts
           if git diff --staged --quiet; then
             echo "No new content today (budget spent or targets met)."
           else

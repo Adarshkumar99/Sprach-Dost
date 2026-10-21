@@ -10,8 +10,9 @@
     "gen:vocab": "node scripts/generate-vocab.mjs",
     "gen:grammar": "node scripts/generate-grammar.mjs",
     "gen:stories": "node scripts/generate-stories.mjs",
+    "gen:tests": "node scripts/generate-tests.mjs",
     "gen:branches": "node scripts/generate-branches.mjs",
-    "gen:all": "npm run gen:vocab && npm run gen:grammar && npm run gen:stories && npm run gen:branches",
+    "gen:all": "npm run gen:vocab && npm run gen:grammar && npm run gen:stories && npm run gen:tests && npm run gen:branches",
     "cap:sync": "cap sync android",
     "cap:open": "cap open android"
   },

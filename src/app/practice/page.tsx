@@ -180,6 +180,21 @@ export default function Practice() {
         </Link>
 
         <Link
+          href="/analytics"
+          className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-sky-400/50 transition-all"
+        >
+          <div className="text-5xl">📈</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-lg mb-1">Analytics — Exam Readiness & Skill Trends</div>
+            <p className="text-sm opacity-70">
+              Skill-wise charts (Lesen/Hören/Schreiben/Sprechen), your Goethe readiness %,
+              weak areas and grammar/SRS stats.
+            </p>
+          </div>
+          <span className="btn-ghost text-sm whitespace-nowrap">See my stats →</span>
+        </Link>
+
+        <Link
           href="/pronounce"
           className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-cyan-400/50 transition-all"
         >

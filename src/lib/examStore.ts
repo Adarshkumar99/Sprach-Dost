@@ -9,8 +9,9 @@ import { pushProgressToCloud } from "./supabase";
 
 export type ExamAttempt = {
   id: string;
-  format: string; // "goethe" | "telc" | "osd"
-  level: string; // "A1" | "A2" | "B1"
+  format: string; // "goethe" | "telc" | "osd" | "goethe-series"
+  level: string; // "A1" | "A2" | "B1" | "B2"
+  testId?: string; // test-series test id (e.g. "a1-t07")
   date: number; // ms epoch
   overall: number; // 0-100
   perPart: { title: string; pct: number }[];

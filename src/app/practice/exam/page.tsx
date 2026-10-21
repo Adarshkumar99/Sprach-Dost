@@ -20,13 +20,25 @@ import {
   type ExamWritingReport,
   type ExamSpeakingReport,
 } from "@/lib/parse";
-import { saveExamAttempt } from "@/lib/examStore";
+import { saveExamAttempt, getExamAttempts, type ExamAttempt } from "@/lib/examStore";
 import { addMistake } from "@/lib/mistakes";
 import { recordSession } from "@/lib/progress";
 import { recordWeekly } from "@/lib/weekly";
+import { loadSeries, FREE_COUNT, SERIES_LEVELS, type SeriesLevel, type SeriesTest } from "@/lib/testSeries";
+import { usePro } from "@/lib/usePro";
 
 type Phase = "setup" | "exam" | "done";
 type PartResult = { title: string; pct: number };
+
+/** convert a generated series test into the runner's part format */
+function seriesToParts(t: SeriesTest): ExamPart[] {
+  return [
+    { kind: "lesen", title: t.lesen.title, instructionsEn: "Read the text and tap the right answer.", text: t.lesen.text, questions: t.lesen.questions },
+    { kind: "horen", title: t.horen.title, instructionsEn: "Listen carefully — you can replay it up to 3 times.", scriptDe: t.horen.scriptDe, questions: t.horen.questions },
+    { kind: "schreiben", title: t.schreiben.title, instructionsEn: "Type a German text. The AI examiner grades it.", promptDe: t.schreiben.promptDe, promptEn: t.schreiben.promptEn, wordTarget: Number(t.schreiben.wordTarget), bullets: t.schreiben.bullets },
+    { kind: "sprechen", title: "Sprechen — 3 Teile", instructionsEn: "Hear the examiner, speak your answer in German.", tasks: t.sprechen.tasks },
+  ];
+}
 
 async function callAI(
   mode: string,
@@ -91,6 +103,13 @@ export default function ExamPage() {
   const [phase, setPhase] = useState<Phase>("setup");
   const [formatId, setFormatId] = useState<ExamFormatId>("goethe");
   const [level, setLevel] = useState<ExamLevel>("A1");
+  const [mode, setMode] = useState<"fixed" | "series">("fixed");
+  const [seriesLevel, setSeriesLevel] = useState<SeriesLevel>("A1");
+  const [seriesTests, setSeriesTests] = useState<SeriesTest[]>([]);
+  const [series, setSeries] = useState<SeriesTest | null>(null);
+  const [attempts, setAttempts] = useState<ExamAttempt[]>([]);
+  const [proNudge, setProNudge] = useState(false);
+  const { isPro } = usePro();
 
   const [partIdx, setPartIdx] = useState(0);
   const [mcq, setMcq] = useState<Record<string, number>>({});
@@ -120,7 +139,32 @@ export default function ExamPage() {
   const savedRef = useRef(false);
 
   const exam = useMemo(() => getExam(formatId, level), [formatId, level]);
-  const part: ExamPart | undefined = exam?.parts[partIdx];
+  const parts: ExamPart[] | undefined = useMemo(
+    () => (series ? seriesToParts(series) : exam?.parts),
+    [series, exam]
+  );
+  const part: ExamPart | undefined = parts?.[partIdx];
+  const activeLevel = series ? seriesLevel : level;
+  const examLabel = series
+    ? `Goethe Test-Serie ${seriesLevel} • ${series.title}`
+    : `${exam?.format.label ?? "Goethe"} ${level}`;
+  const examFormatId = series ? "goethe-series" : (exam?.format.id ?? "goethe");
+
+  /* load series bank + attempt history for the picker */
+  useEffect(() => {
+    let alive = true;
+    if (mode !== "series") return;
+    loadSeries(seriesLevel).then((t) => {
+      if (alive) setSeriesTests(t);
+    });
+    return () => {
+      alive = false;
+    };
+  }, [mode, seriesLevel]);
+
+  useEffect(() => {
+    queueMicrotask(() => setAttempts(getExamAttempts()));
+  }, []);
 
   /* elapsed timer */
   useEffect(() => {
@@ -149,7 +193,7 @@ export default function ExamPage() {
     [mcq, partPct]
   );
 
-  const startExam = () => {
+  const startExam = useCallback(() => {
     startedAt.current = Date.now();
     savedRef.current = false;
     setPartIdx(0);
@@ -164,7 +208,27 @@ export default function ExamPage() {
     setPartPct({});
     setElapsed(0);
     setPhase("exam");
-  };
+  }, []);
+
+  const startSeries = useCallback(
+    (t: SeriesTest) => {
+      setSeries(t);
+      startExam();
+    },
+    [startExam]
+  );
+
+  const pickSeries = useCallback(
+    (t: SeriesTest, index: number) => {
+      if (index + 1 > FREE_COUNT && !isPro) {
+        setProNudge(true);
+        return;
+      }
+      setProNudge(false);
+      startSeries(t);
+    },
+    [isPro, startSeries]
+  );
 
   const playHoren = () => {
     if (part?.kind !== "horen" || horenPlaying) return;
@@ -205,7 +269,7 @@ Target length: ~${part.wordTarget} words.
 
 STUDENT'S TEXT:
 ${written.trim()}`;
-    const { reply, offline, error } = await callAI("exam-writing", prompt, level);
+    const { reply, offline, error } = await callAI("exam-writing", prompt, activeLevel);
     if (!reply) {
       setWriting({
         report: null,
@@ -245,7 +309,7 @@ ${written.trim()}`;
     }, 0);
     const kwPct = Math.round((kwTotal / part.tasks.length) * 100);
 
-    const { reply, offline, error } = await callAI("exam-speaking", transcript, level);
+    const { reply, offline, error } = await callAI("exam-speaking", transcript, activeLevel);
     if (!reply) {
       setSpeaking({ rubric: null, loading: false, error: offline ? "AI offline — keyword score used." : `AI failed${error ? `: ${error}` : ""}.` });
       setPartPct((p) => ({ ...p, [partIdx]: kwPct }));
@@ -261,23 +325,23 @@ ${written.trim()}`;
       addMistake({
         wrong: Object.values(spokenAll).join(" ").slice(0, 240),
         note: rubric.mistakes.slice(0, 400),
-        context: `Exam Sprechen — ${exam?.format.label ?? ""} ${level}`,
+        context: `Exam Sprechen — ${examLabel}`,
       });
     }
     setSpeaking({ rubric, loading: false, error: null });
   };
 
   const finishExam = () => {
-    if (!exam) return;
+    if (!parts) return;
     recordWeekly({ examMinutes: Math.max(1, Math.round(elapsed / 60)) });
-    recordSession({ minutes: Math.max(1, Math.round(elapsed / 60)), words: 0, level });
+    recordSession({ minutes: Math.max(1, Math.round(elapsed / 60)), words: 0, level: activeLevel });
     setPhase("done");
   };
 
   /** advance to next part, or finish the exam when past the last one */
   const nextPart = () => {
-    if (!exam) return;
-    if (partIdx + 1 >= exam.parts.length) {
+    if (!parts) return;
+    if (partIdx + 1 >= parts.length) {
       finishExam();
       return;
     }
@@ -293,17 +357,17 @@ ${written.trim()}`;
 
   /* overall + save on done */
   const results: PartResult[] = useMemo(() => {
-    if (!exam) return [];
-    return exam.parts
+    if (!parts) return [];
+    return parts
       .map((p, i) => ({ title: p.title, pct: partPctFor(p, i) ?? 0 }))
       .map((r) => ({ ...r, pct: Math.max(0, r.pct) }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, exam, partPct, mcq]);
+  }, [phase, parts, partPct, mcq]);
 
   const overall = results.length ? Math.round(results.reduce((a, b) => a + b.pct, 0) / results.length) : 0;
 
   useEffect(() => {
-    if (phase !== "done" || savedRef.current || !exam) return;
+    if (phase !== "done" || savedRef.current || !parts) return;
     savedRef.current = true;
     const dims = speaking.rubric
       ? {
@@ -316,8 +380,9 @@ ${written.trim()}`;
       : undefined;
     saveExamAttempt({
       id: `exam-${startedAt.current}`,
-      format: exam.format.id,
-      level: exam.level,
+      format: examFormatId,
+      level: activeLevel,
+      testId: series?.id,
       date: startedAt.current,
       overall,
       perPart: results,
@@ -327,63 +392,166 @@ ${written.trim()}`;
   }, [phase]);
 
   /* ─── setup ─── */
-  if (phase === "setup" || !exam || !part) {
+  if (phase === "setup" || !parts || !part) {
     const format = exam?.format ?? EXAMS[0];
+    const bestFor = (testId: string): number | null => {
+      const rel = attempts.filter((a) => a.testId === testId);
+      return rel.length ? Math.max(...rel.map((a) => a.overall)) : null;
+    };
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center px-6 max-w-xl mx-auto w-full text-center">
+      <main className="min-h-screen flex flex-col items-center px-6 py-14 max-w-xl mx-auto w-full text-center">
         <Link href="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100">
           ← Back
         </Link>
-        <div className="text-6xl mb-4">🎓</div>
-        <h1 className="text-3xl md:text-4xl font-extrabold mb-3">Full Exam Simulator</h1>
-        <p className="opacity-70 text-sm mb-8">
-          Lesen • Hören • Schreiben • Sprechen — a complete Goethe / telc / ÖSD style mock with AI grading.
+        <div className="text-6xl mb-3">🎓</div>
+        <h1 className="text-3xl md:text-4xl font-extrabold mb-2">Full Exam Simulator</h1>
+        <p className="opacity-70 text-sm mb-6">
+          Lesen • Hören • Schreiben • Sprechen — complete mocks with AI grading.
         </p>
 
-        <div className="grid gap-2 w-full mb-6">
-          {EXAM_FORMAT_META.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setFormatId(f.id)}
-              className={`glass rounded-2xl p-4 text-left border transition-all ${
-                formatId === f.id ? "border-yellow-400/70 shadow-lg scale-[1.02]" : "border-white/10 opacity-75 hover:opacity-100"
-              }`}
-            >
-              <div className="font-extrabold">{f.label}</div>
-              <div className="text-xs opacity-60">{f.tagline}</div>
-            </button>
-          ))}
+        {/* mode tabs */}
+        <div className="flex gap-2 mb-8 w-full">
+          <button
+            onClick={() => { setMode("fixed"); setProNudge(false); }}
+            className={`flex-1 rounded-2xl py-3 text-sm font-extrabold transition-all ${
+              mode === "fixed" ? "german-gradient text-black shadow-lg" : "glass opacity-70 hover:opacity-100"
+            }`}
+          >
+            📋 Modelltests
+          </button>
+          <button
+            onClick={() => { setMode("series"); setProNudge(false); }}
+            className={`flex-1 rounded-2xl py-3 text-sm font-extrabold transition-all ${
+              mode === "series" ? "german-gradient text-black shadow-lg" : "glass opacity-70 hover:opacity-100"
+            }`}
+          >
+            📚 Test-Serie 50×
+          </button>
         </div>
 
-        <div className="flex gap-2 mb-6">
-          {(["A1", "A2", "B1"] as const).map((l) => (
-            <button
-              key={l}
-              onClick={() => setLevel(l)}
-              className={`px-5 h-10 rounded-xl font-extrabold transition-all ${
-                level === l ? "german-gradient text-black shadow-lg scale-105" : "glass opacity-60 hover:opacity-100"
-              }`}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
-
-        <div className="glass rounded-2xl p-4 w-full mb-6 text-left">
-          {format.parts[level].map((p, i) => (
-            <div key={i} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">
-              <div className="text-sm font-semibold">{p.title}</div>
-              <div className="text-xs opacity-60">
-                {p.kind === "sprechen" ? `${p.tasks.length} tasks` : p.kind === "schreiben" ? "AI graded" : `${p.questions.length} Qs`}
-              </div>
+        {mode === "fixed" ? (
+          <>
+            <div className="grid gap-2 w-full mb-6">
+              {EXAM_FORMAT_META.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setFormatId(f.id)}
+                  className={`glass rounded-2xl p-4 text-left border transition-all ${
+                    formatId === f.id ? "border-yellow-400/70 shadow-lg scale-[1.02]" : "border-white/10 opacity-75 hover:opacity-100"
+                  }`}
+                >
+                  <div className="font-extrabold">{f.label}</div>
+                  <div className="text-xs opacity-60">{f.tagline}</div>
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
 
-        <button onClick={startExam} className="btn-primary !py-4 !px-10 w-full">
-          🎓 Start full mock exam →
-        </button>
-        <p className="text-xs opacity-50 mt-4">Browser mic needed for Sprechen. ~15–20 minutes.</p>
+            <div className="flex gap-2 mb-6">
+              {(["A1", "A2", "B1"] as const).map((l) => (
+                <button
+                  key={l}
+                  onClick={() => setLevel(l)}
+                  className={`px-5 h-10 rounded-xl font-extrabold transition-all ${
+                    level === l ? "german-gradient text-black shadow-lg scale-105" : "glass opacity-60 hover:opacity-100"
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+
+            <div className="glass rounded-2xl p-4 w-full mb-6 text-left">
+              {format.parts[level].map((p, i) => (
+                <div key={i} className="flex justify-between items-center py-2 border-b border-white/5 last:border-0">
+                  <div className="text-sm font-semibold">{p.title}</div>
+                  <div className="text-xs opacity-60">
+                    {p.kind === "sprechen" ? `${p.tasks.length} tasks` : p.kind === "schreiben" ? "AI graded" : `${p.questions.length} Qs`}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button onClick={startExam} className="btn-primary !py-4 !px-10 w-full">
+              🎓 Start full mock exam →
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="flex gap-2 mb-4">
+              {SERIES_LEVELS.map((l) => (
+                <button
+                  key={l}
+                  onClick={() => { setSeriesLevel(l); setProNudge(false); }}
+                  className={`px-5 h-10 rounded-xl font-extrabold transition-all ${
+                    seriesLevel === l ? "german-gradient text-black shadow-lg scale-105" : "glass opacity-60 hover:opacity-100"
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs opacity-60 mb-4">
+              Goethe-style full mocks • Tests 1–{FREE_COUNT} free, 11–50 Pro ✨
+              {seriesTests.length < 50 && <> • {seriesTests.length}/50 generated (more coming daily)</>}
+            </p>
+
+            {seriesTests.length === 0 ? (
+              <div className="glass rounded-2xl p-8 w-full mb-6">
+                <div className="text-4xl mb-2">🚧</div>
+                <p className="text-sm opacity-70">Tests for {seriesLevel} are being generated — check back tomorrow!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-5 sm:grid-cols-8 gap-2 w-full mb-4">
+                {seriesTests.map((t, i) => {
+                  const best = bestFor(t.id);
+                  const locked = i + 1 > FREE_COUNT && !isPro;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => pickSeries(t, i)}
+                      className={`relative rounded-xl py-2.5 text-sm font-extrabold transition-all ${
+                        locked
+                          ? "glass opacity-40 cursor-pointer hover:opacity-70"
+                          : best !== null
+                            ? "bg-emerald-500/15 border border-emerald-400/50 text-emerald-300"
+                            : "glass hover:border-amber-400/50"
+                      }`}
+                    >
+                      {i + 1}
+                      {locked && <span className="absolute -top-1 -right-1 text-[10px]">🔒</span>}
+                      {best !== null && !locked && <span className="block text-[9px] font-bold opacity-70">{best}%</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {proNudge && (
+              <div className="glass rounded-2xl p-5 w-full mb-4 border border-amber-400/40">
+                <div className="font-bold mb-1">✨ Tests 11–50 are part of Pro</div>
+                <p className="text-xs opacity-70 mb-3">
+                  Unlimited test series, AI grading, career packs — ₹500/month, cancel anytime.
+                </p>
+                <Link href="/pro" className="btn-primary inline-block text-sm !py-2.5 !px-6">
+                  Upgrade to Pro →
+                </Link>
+              </div>
+            )}
+
+            <button
+              onClick={() => {
+                const free = seriesTests.slice(0, isPro ? seriesTests.length : FREE_COUNT);
+                if (free.length) pickSeries(free[Math.floor(Math.random() * free.length)], seriesTests.indexOf(free[0]));
+              }}
+              disabled={seriesTests.length === 0}
+              className="btn-ghost w-full !py-3 text-sm mb-3 disabled:opacity-40"
+            >
+              🎲 Random test
+            </button>
+          </>
+        )}
+
+        <p className="text-xs opacity-50 mt-4">Browser mic needed for Sprechen. ~15–20 minutes per test.</p>
       </main>
     );
   }
@@ -396,7 +564,7 @@ ${written.trim()}`;
         <div className="text-6xl mb-4">🎓</div>
         <h1 className="text-3xl font-extrabold mb-1">Exam complete!</h1>
         <p className="opacity-70 text-sm mb-4">
-          {exam.format.label} • {exam.level} • {Math.floor(elapsed / 60)}m {elapsed % 60}s
+          {examLabel} • {Math.floor(elapsed / 60)}m {elapsed % 60}s
         </p>
         <div className="glass rounded-3xl w-full p-6 mb-6">
           <div className="text-5xl font-extrabold german-gradient-text">{overall}%</div>
@@ -443,14 +611,14 @@ ${written.trim()}`;
           ← Quit
         </button>
         <div className="text-sm opacity-70">
-          Part {partIdx + 1} / {exam.parts.length} • {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
+          Part {partIdx + 1} / {parts.length} • {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, "0")}
         </div>
         <div className="text-xs px-2 py-1 rounded-full bg-white/10">
-          {exam.format.label.split(" ")[0]} {exam.level}
+          {examLabel}
         </div>
       </div>
       <div className="w-full h-1.5 bg-white/10 rounded-full mb-8 overflow-hidden">
-        <div className="h-full german-gradient rounded-full transition-all" style={{ width: `${(partIdx / exam.parts.length) * 100}%` }} />
+        <div className="h-full german-gradient rounded-full transition-all" style={{ width: `${(partIdx / parts.length) * 100}%` }} />
       </div>
     </>
   );
@@ -503,7 +671,7 @@ ${written.trim()}`;
         >
           {answered < part.questions.length
             ? `Answer all (${answered}/${part.questions.length})`
-            : partIdx + 1 >= exam.parts.length
+            : partIdx + 1 >= parts.length
               ? "🎓 Finish & see results"
               : "Next part →"}
         </button>
@@ -576,7 +744,7 @@ ${written.trim()}`;
           )}
         </div>
         <button onClick={nextPart} className="btn-ghost w-full !py-4">
-          {partIdx + 1 >= exam.parts.length ? "🎓 Finish & see results" : writing.report || writing.error ? "Next part →" : "Skip grading & continue →"}
+          {partIdx + 1 >= parts.length ? "🎓 Finish & see results" : writing.report || writing.error ? "Next part →" : "Skip grading & continue →"}
         </button>
       </main>
     );
@@ -646,7 +814,7 @@ ${written.trim()}`;
         </button>
       ) : (
         <button onClick={nextPart} className="btn-ghost w-full !py-4">
-          {partIdx + 1 >= exam.parts.length ? "🎓 Finish & see results" : "Next part →"}
+          {partIdx + 1 >= parts.length ? "🎓 Finish & see results" : "Next part →"}
         </button>
       )}
       {speaking.loading && <p className="text-xs opacity-60 mt-3">✨ AI examiner is listening to your transcript…</p>}

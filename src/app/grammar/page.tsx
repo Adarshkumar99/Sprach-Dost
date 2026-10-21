@@ -267,6 +267,12 @@ export default function GrammarPage() {
         {dueCount > 0 && <> • 🔁 <b className="text-amber-300">{dueCount}</b> due for review</>}
       </div>
 
+      {dueCount > 0 && (
+        <Link href="/grammar/review" className="btn-primary w-full !py-4 mb-6 max-w-md">
+          🔁 Start review session ({Math.min(4, dueCount)} due topics, ~10 min) →
+        </Link>
+      )}
+
       {loading ? (
         <div className="opacity-60">Loading lessons…</div>
       ) : topics.length === 0 ? (
