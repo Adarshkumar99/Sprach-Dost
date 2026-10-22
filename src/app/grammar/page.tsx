@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { speakSmart, loadVoices } from "@/lib/speech";
 import { pushProgressToCloud } from "@/lib/supabase";
 import { gradeCard, getCardState } from "@/lib/srs";
@@ -79,6 +79,26 @@ export default function GrammarPage() {
     })();
     return () => { alive = false; };
   }, [level]);
+
+  /* deep link: /grammar?level=X&topic=Y (from public SEO pages) */
+  const pendingTopicRef = useRef<string | null>(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const l = params.get("level");
+    const t = params.get("topic");
+    if (t) pendingTopicRef.current = t;
+    if (l) queueMicrotask(() => setLevel(l));
+  }, []);
+
+  useEffect(() => {
+    const pending = pendingTopicRef.current;
+    if (!pending || topics.length === 0) return;
+    const match = topics.find((t) => t.id === pending);
+    if (match) {
+      pendingTopicRef.current = null;
+      setView({ name: "lesson", topic: match });
+    }
+  }, [topics]);
 
   const startQuiz = useCallback((topic: GrammarTopic) => {
     loadVoices();

@@ -5,6 +5,7 @@ import { SEO_LEVELS, loadGrammarForLevel, type SeoLevel } from "@/lib/seoData";
 import PublicCta from "@/components/PublicCta";
 import GrammarTeaser from "@/components/GrammarTeaser";
 import SpeakButton from "@/components/SpeakButton";
+import PrintButton from "@/components/PrintButton";
 
 export const dynamicParams = false;
 
@@ -55,24 +56,44 @@ export default async function GrammarTopicPage({ params }: { params: Promise<{ l
       <Link href={`/grammatik/${up.toLowerCase()}`} className="self-start text-sm opacity-70 hover:opacity-100 mb-6">
         ← German {up} topics
       </Link>
-      <h1 className="text-3xl font-extrabold text-center mb-2">{t.title}</h1>
-      <p className="text-xs opacity-50 mb-6">German Grammar • Level {up} • Goethe syllabus</p>
+      <h1 className="text-3xl font-extrabold text-center mb-2 print:text-black">{t.title}</h1>
+      <p className="text-xs opacity-50 mb-4">German Grammar • Level {up} • Goethe syllabus</p>
+      <div className="flex gap-2 justify-center mb-6">
+        <SpeakButton text={firstDe} />
+        <PrintButton />
+      </div>
 
-      <article className="glass rounded-3xl w-full p-6 md:p-8 mb-6">
+      <article className="glass rounded-3xl w-full p-6 md:p-8 mb-6 print:bg-white print:text-black print:border-none">
         <p className="whitespace-pre-wrap leading-relaxed text-[15px]">{t.lesson}</p>
-        <div className="mt-5">
+        <div className="mt-5 print:hidden">
           <SpeakButton text={firstDe} />
         </div>
       </article>
 
       {teaser.length > 0 && (
         <>
-          <h2 className="text-lg font-extrabold mb-3 self-start">Try {teaser.length} questions — free</h2>
-          <div className="glass rounded-3xl w-full p-6 md:p-8 mb-6">
+          <h2 className="text-lg font-extrabold mb-3 self-start print:hidden">Try {teaser.length} questions — free</h2>
+          <div className="glass rounded-3xl w-full p-6 md:p-8 mb-6 print:hidden">
             <GrammarTeaser questions={teaser} />
           </div>
         </>
       )}
+
+      <div className="glass rounded-3xl w-full p-6 mb-6 print:hidden">
+        <div className="text-xs font-bold tracking-widest opacity-60 mb-3">PRACTICE THIS TOPIC — 6 FREE SETS (20 QUESTIONS EACH)</div>
+        <div className="grid sm:grid-cols-2 gap-2">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <Link
+              key={n}
+              href={`/grammar?level=${up}&topic=${t.id}&set=${n}`}
+              className="glass rounded-xl px-4 py-3 text-sm font-semibold text-left hover:border-amber-400/40 transition-all"
+            >
+              Übungsset {n} <span className="opacity-50">— 20 mixed questions</span>
+            </Link>
+          ))}
+        </div>
+        <p className="text-xs opacity-50 mt-3">Every set draws fresh questions from a pool of 400+ for this topic.</p>
+      </div>
 
       <PublicCta text={`In the app: 400+ questions on this exact topic, spaced repetition and AI exam grading.`} />
 

@@ -195,6 +195,21 @@ export default function Practice() {
         </Link>
 
         <Link
+          href="/practice/sentence"
+          className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-teal-400/50 transition-all"
+        >
+          <div className="text-5xl">🧩</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-lg mb-1">Satz-Baukasten — Sentence Building</div>
+            <p className="text-sm opacity-70">
+              Scrambled German sentences — tap the words in the right order. Master word order
+              (the #1 German struggle) in fun 6-minute rounds. Feeds your SRS deck.
+            </p>
+          </div>
+          <span className="btn-ghost text-sm whitespace-nowrap">Build sentences →</span>
+        </Link>
+
+        <Link
           href="/pronounce"
           className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-cyan-400/50 transition-all"
         >
