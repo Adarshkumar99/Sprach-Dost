@@ -128,6 +128,8 @@ Most German learners in India complete months of coaching yet freeze when they h
 
 ### Technical details
 - Voice synthesis & recognition via the browser Web Speech API (German + English voices, no cost)
+- **Neural voices via edge-tts** (Microsoft Edge's free online TTS — Katja/Conrad for German, Neerja/Prabhat for Indian-English explanations) — no API key, with ElevenLabs and browser-voice fallbacks
+- **Satz-Baukasten** — sentence-building exercise (tap words in the right order), feeds the SRS
 - Optional premium neural voices via ElevenLabs — the client falls back to free browser voices automatically
 - AI conversations via Groq with automatic model fallback
 - CEFR level selection per session (A1–C2)
