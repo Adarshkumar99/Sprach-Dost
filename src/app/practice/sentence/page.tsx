@@ -7,6 +7,7 @@
  */
 
 import Link from "next/link";
+import BackLink from "@/components/BackLink";
 import { useCallback, useMemo, useState } from "react";
 import { wordsForLevel } from "@/lib/vocabStore";
 import { vocabId, type VocabWord } from "@/lib/vocab";
@@ -109,7 +110,7 @@ export default function SentencePage() {
   if (phase === "setup") {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center px-6 max-w-xl mx-auto w-full text-center">
-        <Link href="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100">← Back</Link>
+        <BackLink fallback="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100" />
         <div className="text-6xl mb-4">🧩</div>
         <h1 className="text-3xl md:text-4xl font-extrabold mb-3">Satz-Baukasten</h1>
         <p className="opacity-70 text-sm mb-8">

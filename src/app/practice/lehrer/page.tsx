@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Avatar from "@/components/Avatar";
 import AvatarPicker from "@/components/AvatarPicker";
+import BackLink from "@/components/BackLink";
 import ChatList, { type ChatMsg } from "@/components/ChatList";
 import MicButton from "@/components/MicButton";
 import { speakSmart, stopSpeaking, listen, loadVoices, isSpeakingSupported, isEcho } from "@/lib/speech";
@@ -308,7 +309,7 @@ export default function LehrerPage() {
   if (phase === "feedback") {
     return (
       <main className="min-h-screen flex flex-col items-center px-6 py-10 max-w-3xl mx-auto w-full">
-        <Link href="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100">← Back</Link>
+        <BackLink fallback="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100" />
         <div className="text-center mb-6">
           <div className="text-5xl mb-3">📋</div>
           <h1 className="text-3xl font-extrabold">Lesson Report — Lehrer</h1>
@@ -348,7 +349,7 @@ export default function LehrerPage() {
   if (phase === "setup" || needsKey) {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center px-6 py-14 max-w-3xl mx-auto w-full">
-        <Link href="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100">← Back</Link>
+        <BackLink fallback="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100" />
 
         <Avatar variant={avatarKey} size={170} />
 
@@ -468,7 +469,7 @@ export default function LehrerPage() {
   return (
     <main className="min-h-screen flex flex-col px-4 md:px-8 py-6 max-w-5xl mx-auto w-full">
       <div className="flex items-center justify-between mb-4 gap-2">
-        <Link href="/practice" className="text-sm opacity-70 hover:opacity-100 shrink-0">← Back</Link>
+        <BackLink fallback="/practice" className="text-sm opacity-70 hover:opacity-100 shrink-0" />
         <div className="text-center">
           <div className="font-extrabold text-lg">👨‍🏫 Lehrer</div>
           <div className="text-xs opacity-60">📚 {topic} • Level {level}</div>

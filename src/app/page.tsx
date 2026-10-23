@@ -19,6 +19,7 @@ export default function Home() {
           <Link href="/grammar" className="hover:text-amber-400 transition-colors">Grammar 📐</Link>
           <Link href="/stories" className="hover:text-amber-400 transition-colors">Stories 📖</Link>
           <Link href="/placement" className="hover:text-amber-400 transition-colors">Placement 🧭</Link>
+          <Link href="/practice" className="hover:text-amber-400 transition-colors">Features ✨</Link>
           <a href="#pricing" className="hover:text-amber-400 transition-colors">Pricing</a>
         </div>
         <div className="flex items-center gap-3">
@@ -37,6 +38,7 @@ export default function Home() {
           ["Grammar", "/grammar", "📐"],
           ["Stories", "/stories", "📖"],
           ["Placement", "/placement", "🧭"],
+          ["Features", "/practice", "✨"],
           ["Exam", "/practice/exam", "🎓"],
           ["Speak", "/pronounce", "🔊"],
         ].map(([label, href, icon]) => (

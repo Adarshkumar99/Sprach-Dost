@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BackLink from "@/components/BackLink";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { speakSmart, loadVoices } from "@/lib/speech";
 import { vocabId, type VocabWord } from "@/lib/vocab";
@@ -389,7 +390,7 @@ export default function VocabPage() {
   /* ---------- setup ---------- */
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-14 max-w-2xl mx-auto w-full">
-      <Link href="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100">← Back</Link>
+      <BackLink fallback="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100" />
 
       <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-2">📇 Vocabulary Trainer</h1>
       <p className="opacity-70 text-center text-sm mb-8">

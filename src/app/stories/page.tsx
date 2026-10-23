@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import BackLink from "@/components/BackLink";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { speakSmart, loadVoices } from "@/lib/speech";
 import { pushProgressToCloud } from "@/lib/supabase";
@@ -218,7 +218,7 @@ export default function StoriesPage() {
   /* ═══════ LIST ═══════ */
   return (
     <main className="min-h-screen flex flex-col items-center px-6 py-14 max-w-3xl mx-auto w-full">
-      <Link href="/practice" className="self-start text-sm opacity-70 hover:opacity-100 mb-6">← Practice hub</Link>
+      <BackLink fallback="/practice" label="← Practice hub" className="self-start text-sm opacity-70 hover:opacity-100 mb-6" />
 
       <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-2">📖 Story Time</h1>
       <p className="opacity-70 text-center text-sm mb-8">

@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Avatar from "@/components/Avatar";
 import AvatarPicker from "@/components/AvatarPicker";
+import BackLink from "@/components/BackLink";
 import { speakSmart, stopSpeaking, listen, loadVoices, isEcho } from "@/lib/speech";
 import { parseFeedback, type FeedbackReport } from "@/lib/parse";
 import { recordSession, countVocab } from "@/lib/progress";
@@ -236,19 +237,11 @@ export default function FreeTalkPage() {
       const queue: { text: string; resolve: () => void }[] = [];
       const spokenCount = { n: 0 };
       const pendingQueue: string[] = [];
-      const queueFlusher = { running: false };
 
       const flushQueue = () => {
-        if (queueFlusher.running) return;
-        queueFlusher.running = true;
-        void (async () => {
-          // move pending sentences into the ordered queue
-          for (const s of pendingQueue.splice(0)) {
-            await new Promise<void>((resolve) => queue.push({ text: s, resolve }));
-          }
-          queueFlusher.running = false;
-          if (queue.length > 0 && !speakingRef.current) void drainQueue(queue);
-        })();
+        // sync push + immediate drain — items resolve via drainQueue's playback loop
+        for (const s of pendingQueue.splice(0)) queue.push({ text: s, resolve: () => {} });
+        if (queue.length > 0 && !speakingRef.current) void drainQueue(queue);
       };
 
       try {
@@ -421,7 +414,7 @@ export default function FreeTalkPage() {
   if (phase === "setup") {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center px-6 max-w-xl mx-auto w-full text-center">
-        <Link href="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100">← Back</Link>
+        <BackLink fallback="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100" />
         <div className="text-6xl mb-4">🎙️</div>
         <h1 className="text-3xl md:text-4xl font-extrabold mb-2">Free Talk</h1>
         <p className="opacity-70 text-sm mb-8 max-w-md">

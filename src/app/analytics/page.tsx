@@ -6,6 +6,7 @@
  */
 
 import Link from "next/link";
+import BackLink from "@/components/BackLink";
 import { useEffect, useMemo, useState } from "react";
 import { getExamAttempts, type ExamAttempt } from "@/lib/examStore";
 import { getProgress } from "@/lib/progress";
@@ -130,7 +131,7 @@ export default function AnalyticsPage() {
 
   return (
     <main className="min-h-screen flex flex-col items-center px-6 py-14 max-w-3xl mx-auto w-full">
-      <Link href="/practice" className="self-start text-sm opacity-70 hover:opacity-100 mb-6">← Practice hub</Link>
+      <BackLink fallback="/practice" label="← Practice hub" className="self-start text-sm opacity-70 hover:opacity-100 mb-6" />
 
       <h1 className="text-3xl md:text-4xl font-extrabold text-center mb-2">📈 Analytics</h1>
       <p className="opacity-70 text-center text-sm mb-8">Your exam readiness, skill trends and weak areas — all offline data.</p>

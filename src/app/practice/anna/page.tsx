@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Avatar from "@/components/Avatar";
 import AvatarPicker from "@/components/AvatarPicker";
+import BackLink from "@/components/BackLink";
 import ChatList, { type ChatMsg } from "@/components/ChatList";
 import MicButton from "@/components/MicButton";
 import { speakSmart, stopSpeaking, listen, loadVoices, isEcho } from "@/lib/speech";
@@ -101,8 +102,8 @@ export default function AnnaPage() {
   }, []);
 
   const avatarTalk = useCallback(
-    (german: string, erklarung: string, after?: () => void) => {
-      avatarTextRef.current = `${german} ${erklarung}`; // remember for echo detection
+    (german: string, _erklarung: string, after?: () => void) => {
+      avatarTextRef.current = german; // remember for echo detection (only what is actually spoken)
       const finish = () => {
         setSpeaking(false);
         if (after) after();
@@ -114,21 +115,11 @@ export default function AnnaPage() {
       }
       setSpeaking(true);
       const isFemale = ["anna", "lena", "sophie"].includes(avatarKey);
+      // GERMAN voice only — English explanation stays on screen as text
       void speakSmart(german, "de-DE", {
         genderHint: isFemale ? "anna" : "lehrer",
         onError: () => {},
-        onEnd: () => {
-          if (erklarung) {
-            void speakSmart(erklarung, "en-IN", {
-              genderHint: isFemale ? "anna" : "lehrer",
-              rate: 1.0,
-              onError: () => {},
-              onEnd: finish,
-            });
-          } else {
-            finish();
-          }
-        },
+        onEnd: finish,
       });
     },
     [autoMic, avatarKey]
@@ -327,7 +318,7 @@ export default function AnnaPage() {
     const filtered = track ? SCENARIOS.filter((s) => s.track === track) : SCENARIOS.filter((s) => s.category === category);
     return (
       <main className="min-h-screen px-4 md:px-10 py-8 max-w-6xl mx-auto w-full">
-        <Link href="/practice" className="text-sm opacity-70 hover:opacity-100">← Back</Link>
+        <BackLink fallback="/practice" className="text-sm opacity-70 hover:opacity-100" />
 
         <div className="text-center mt-4 mb-6">
           <h1 className="text-3xl md:text-5xl font-extrabold">🗣️ Conversation Scenarios</h1>
@@ -458,7 +449,7 @@ export default function AnnaPage() {
   if (phase === "feedback") {
     return (
       <main className="min-h-screen flex flex-col items-center px-6 py-10 max-w-3xl mx-auto w-full">
-        <Link href="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100">← Back</Link>
+        <BackLink fallback="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100" />
         <div className="text-center mb-6">
           <div className="text-5xl mb-3">📋</div>
           <h1 className="text-3xl font-extrabold">Session Report</h1>

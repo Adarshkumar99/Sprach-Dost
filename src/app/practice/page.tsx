@@ -34,7 +34,7 @@ export default function Practice() {
           href="/practice/anna"
           className="glass rounded-3xl p-10 flex flex-col items-center gap-4 hover:scale-[1.02] hover:border-amber-400/50 transition-all"
         >
-          <Avatar variant="anna" size={200} name="Anna" />
+          <Avatar variant="anna" size={120} name="Anna" />
           <div className="text-center">
             <div className="font-bold text-xl mb-1">🗣️ Anna — Sprechen!</div>
             <p className="text-sm opacity-70">
@@ -49,7 +49,7 @@ export default function Practice() {
           href="/practice/lehrer"
           className="glass rounded-3xl p-10 flex flex-col items-center gap-4 hover:scale-[1.02] hover:border-blue-400/50 transition-all"
         >
-          <Avatar variant="jonas" size={200} name="Jonas" />
+          <Avatar variant="jonas" size={120} name="Jonas" />
           <div className="text-center">
             <div className="font-bold text-xl mb-1">👨‍🏫 Lehrer — Nach Thema!</div>
             <p className="text-sm opacity-70">

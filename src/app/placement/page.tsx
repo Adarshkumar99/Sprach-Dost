@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BackLink from "@/components/BackLink";
 import { useCallback, useEffect, useState } from "react";
 import { speakSmart, loadVoices } from "@/lib/speech";
 import { pushProgressToCloud } from "@/lib/supabase";
@@ -191,7 +192,7 @@ export default function PlacementPage() {
   /* ─── intro ─── */
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-6 max-w-xl mx-auto w-full text-center">
-      <Link href="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100">← Back</Link>
+      <BackLink fallback="/practice" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100" />
       <div className="text-6xl mb-4">🧭</div>
       <h1 className="text-3xl md:text-4xl font-extrabold mb-3">Placement Test</h1>
       <p className="opacity-70 mb-2">

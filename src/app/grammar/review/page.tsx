@@ -6,6 +6,7 @@
  */
 
 import Link from "next/link";
+import BackLink from "@/components/BackLink";
 import { useCallback, useEffect, useState } from "react";
 import { speakSmart, loadVoices } from "@/lib/speech";
 import { gradeCard, getCardState } from "@/lib/srs";
@@ -120,7 +121,7 @@ export default function GrammarReviewPage() {
   if (view.name === "empty") {
     return (
       <main className="min-h-screen flex flex-col items-center justify-center px-6 max-w-xl mx-auto w-full text-center">
-        <Link href="/grammar" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100">← Grammar</Link>
+        <BackLink fallback="/grammar" label="← Grammar" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100" />
         <div className="text-6xl mb-4">🌿</div>
         <h1 className="text-2xl font-extrabold mb-2">Nothing due right now</h1>
         <p className="opacity-70 text-sm mb-6">
