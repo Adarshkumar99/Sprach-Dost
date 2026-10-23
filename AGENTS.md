@@ -69,3 +69,7 @@ STILL BLOCKED — needs user action (ONE item left):
 - AI prompts live in `src/lib/prompts.ts` with strict `MARKER:` formats parsed in `src/lib/parse.ts`.
 - New practice modes: add page under `src/app/…`, card in `src/app/practice/page.tsx`.
 - IST day boundaries: use `progress.ts` helpers, never UTC dates for streaks/weeks.
+- Free Talk voice mode (`/practice/free-talk`): `/api/chat/stream` (Groq SSE) + sentence-queue
+  edge-tts + AnalyserNode VAD barge-in. Shared AI daily limits in `src/lib/aiLimits.ts` (used by
+  both /api/chat and /api/chat/stream; "voice" mode included). VAD threshold tuned for speakers
+  with echoCancellation — tune `rms > 0.055` / `hotTicks >= 4` if barge-in misfires.
