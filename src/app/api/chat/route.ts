@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { enforceAiLimit } from "@/lib/aiLimits";
 import {
   ANNA_SYSTEM,
   LEHRER_SYSTEM,
   FEEDBACK_SYSTEM,
   EXAM_WRITING_SYSTEM,
   EXAM_SPEAKING_SYSTEM,
+  VOICE_SYSTEM,
   fillPrompt,
 } from "@/lib/prompts";
 import { getScenario } from "@/lib/scenarios";
@@ -16,54 +17,6 @@ export const runtime = "nodejs";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
-/* ── free daily limits (in-memory; resets on deploy/restart) ──
-   anonymous: 12 AI replies/day • logged-in free: 40/day • Pro: unlimited */
-const FREE_LIMIT_ANON = 12;
-const FREE_LIMIT_USER = 40;
-const usage = new Map<string, { day: string; count: number }>();
-
-async function resolveCaller(req: Request): Promise<{ key: string; pro: boolean }> {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    "local";
-  const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!token || !url || !anon) return { key: `ip:${ip}`, pro: false };
-  try {
-    const sb = createClient(url, anon, {
-      global: { headers: { Authorization: `Bearer ${token}` } },
-      auth: { persistSession: false },
-    });
-    const { data } = await sb.auth.getUser(token);
-    if (!data?.user) return { key: `ip:${ip}`, pro: false };
-    const { data: prof } = await sb
-      .from("profiles")
-      .select("is_pro")
-      .eq("id", data.user.id)
-      .maybeSingle();
-    return { key: `uid:${data.user.id}`, pro: !!prof?.is_pro };
-  } catch {
-    return { key: `ip:${ip}`, pro: false };
-  }
-}
-
-function overLimit(key: string, limit: number): boolean {
-  const day = new Date().toISOString().slice(0, 10);
-  const entry = usage.get(key);
-  if (!entry || entry.day !== day) {
-    usage.set(key, { day, count: 1 });
-    return false;
-  }
-  entry.count += 1;
-  return entry.count > limit;
-}
-
-/**
- * FREE LLM endpoint — Groq free tier (no card needed).
- * If GROQ_API_KEY missing → { offline: true }, client shows setup instructions.
- */
 export async function POST(req: Request) {
   const body = await req.json();
   const {
@@ -76,7 +29,7 @@ export async function POST(req: Request) {
     branchNode = "",
   }: {
     messages: Msg[];
-    mode: "anna" | "lehrer" | "feedback" | "exam-writing" | "exam-speaking";
+    mode: "anna" | "lehrer" | "voice" | "feedback" | "exam-writing" | "exam-speaking";
     level: string;
     topic: string;
     scenarioId: string;
@@ -92,14 +45,9 @@ export async function POST(req: Request) {
   const isExamMode = mode === "exam-writing" || mode === "exam-speaking";
 
   // free daily limit for AI conversation modes (Pro = unlimited)
-  if (mode === "anna" || mode === "lehrer") {
-    const { key, pro } = await resolveCaller(req);
-    if (!pro && overLimit(key, key.startsWith("uid:") ? FREE_LIMIT_USER : FREE_LIMIT_ANON)) {
-      return NextResponse.json(
-        { limit: true, error: "Daily free limit reached. Upgrade to Pro for unlimited practice." },
-        { status: 429 }
-      );
-    }
+  if (mode === "anna" || mode === "lehrer" || mode === "voice") {
+    const limited = await enforceAiLimit(req);
+    if (limited) return limited;
   }
 
   let system: string;
@@ -115,6 +63,8 @@ export async function POST(req: Request) {
     system = fillPrompt(EXAM_WRITING_SYSTEM, { LEVEL: level });
   } else if (mode === "exam-speaking") {
     system = fillPrompt(EXAM_SPEAKING_SYSTEM, { LEVEL: level });
+  } else if (mode === "voice") {
+    system = fillPrompt(VOICE_SYSTEM, { LEVEL: level, TOPIC: topic || "free", AVATAR: avatarName });
   } else {
     // Anna mode: scenario-driven role-play
     const sc = getScenario(scenarioId);

@@ -195,6 +195,21 @@ export default function Practice() {
         </Link>
 
         <Link
+          href="/practice/free-talk"
+          className="md:col-span-2 glass rounded-3xl p-8 flex flex-col sm:flex-row items-center gap-6 hover:scale-[1.01] hover:border-fuchsia-400/50 transition-all border border-fuchsia-400/30"
+        >
+          <div className="text-6xl">🎙️</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-xl mb-1">Free Talk — Voice-AI-style bolna 🆕</div>
+            <p className="text-sm opacity-70">
+              Koi bhi topic, natural voice conversation — just speak, AI sunta hai, bolta hai, live
+              corrections deta hai. Bolte waqt AI ko rok bhi sakte ho. <b>10 min/day free, Pro me unlimited.</b>
+            </p>
+          </div>
+          <span className="btn-primary text-sm whitespace-nowrap">🎙️ Start talking →</span>
+        </Link>
+
+        <Link
           href="/practice/sentence"
           className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-teal-400/50 transition-all"
         >
