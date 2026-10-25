@@ -825,7 +825,7 @@ export const BRANCHES: Record<string, BranchNode[]> = {
   "post": [
     {
       "id": "n1",
-      "situation": "You are at the post office counter. A customer wants to send a package to India. You need to ask about the weight and choose the right service.",
+      "situation": "You are at the post office counter. A customer wants to send a package back home. You need to ask about the weight and choose the right service.",
       "npcGoal": "Find out the package weight and destination.",
       "outcomes": [
         {
@@ -841,7 +841,7 @@ export const BRANCHES: Record<string, BranchNode[]> = {
     {
       "id": "n2",
       "situation": "The student correctly asks for the weight. The customer says the package is 2.5 kg. You must tell the price options.",
-      "npcGoal": "Provide price options for a 2.5 kg package to India.",
+      "npcGoal": "Provide price options for a 2.5 kg package.",
       "outcomes": [
         {
           "on": "good",
@@ -3345,7 +3345,7 @@ export const BRANCHES: Record<string, BranchNode[]> = {
   "nursing-interview": [
     {
       "id": "n1",
-      "situation": "You are sitting across from the Indian nurse in the interview room. Your first question is about her previous nursing experience.",
+      "situation": "You are sitting across from the nurse from abroad in the interview room. Your first question is about her previous nursing experience.",
       "npcGoal": "Find out what kind of nursing work she has done before.",
       "outcomes": [
         {

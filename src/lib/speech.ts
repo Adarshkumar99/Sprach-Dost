@@ -246,7 +246,7 @@ export async function speakSmart(
     const res = await fetch("/api/tts", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, lang, gender: opts.genderHint ?? "anna" }),
+      body: JSON.stringify({ text, lang, gender: opts.genderHint ?? "anna", rate: opts.rate }),
     });
     const ct = res.headers.get("content-type") ?? "";
     if (res.ok && ct.includes("audio")) {

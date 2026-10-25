@@ -17,9 +17,9 @@ export const metadata: Metadata = {
   ...(process.env.GOOGLE_SITE_VERIFICATION
     ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
     : {}),
-  title: "SprachDost — India will speak German 🇩🇪",
+  title: "SprachDost — Learn German by Speaking 🇩🇪",
   description:
-    "Learn to SPEAK German (A1–C2) by talking with AI avatars — real voice conversations, simple English explanations, Goethe exam prep. Free to start, built for Indian learners.",
+    "Learn to SPEAK German (A1–C2) by talking with AI avatars — real voice conversations, simple English explanations, Goethe exam prep. Free to start.",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg", apple: "/icon.svg" },
   themeColor: "#0b1020",

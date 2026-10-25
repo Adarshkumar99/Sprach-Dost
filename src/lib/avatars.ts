@@ -42,7 +42,7 @@ export const AVATARS: Record<string, AvatarPreset> = {
   raj: {
     key: "raj",
     name: "Raj",
-    role: "Indian fella learning with you",
+    role: "Your practice buddy learning with you",
     emoji: "🇮🇳",
     style: { skin: "#d9a066", hair: "#1c1917", hairStyle: "curly", glasses: false, shirt: "#16a34a", genderHint: "lehrer" },
   },

@@ -329,8 +329,8 @@ Ich wohne seit zwei Jahren in Leipzig und arbeite als Krankenschwester. Am Anfan
           title: "Schreiben — Postkarte",
           instructionsEn: "Type a short German postcard. The AI examiner grades it.",
           promptDe:
-            "Schreiben Sie eine Postkarte an Ihre Familie in Indien. Sie sind jetzt in Berlin. Schreiben Sie: Wo wohnen Sie? Was gefällt Ihnen? Was machen Sie jeden Tag?",
-          promptEn: "Write a postcard to your family in India. You are in Berlin now: where do you live, what do you like, what do you do every day?",
+            "Schreiben Sie eine Postkarte an Ihre Familie. Sie sind jetzt in Berlin. Schreiben Sie: Wo wohnen Sie? Was gefällt Ihnen? Was machen Sie jeden Tag?",
+          promptEn: "Write a postcard to your family back home. You are in Berlin now: where do you live, what do you like, what do you do every day?",
           wordTarget: 30,
           bullets: ["Gruß am Anfang", "Wohnort", "etwas, das gefällt", "Grußformel am Ende"],
         },

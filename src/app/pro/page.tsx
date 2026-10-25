@@ -78,7 +78,7 @@ export default function ProPage() {
       <Link href="/" className="absolute top-6 left-6 text-sm opacity-70 hover:opacity-100">← Home</Link>
       <div className="text-6xl mb-4">✨</div>
       <h1 className="text-3xl md:text-4xl font-extrabold mb-2">SprachDost Pro</h1>
-      <p className="opacity-70 text-sm mb-8">India will speak German — speak without limits.</p>
+      <p className="opacity-70 text-sm mb-8">Speak German with confidence — without limits.</p>
 
       {banner && (
         <div className="glass rounded-2xl px-5 py-3 text-sm mb-6 border border-emerald-400/40 text-emerald-300">

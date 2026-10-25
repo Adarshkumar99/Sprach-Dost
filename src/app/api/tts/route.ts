@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { EdgeTTS } from "node-edge-tts";
+import { edgeTtsBuffer } from "@/lib/edgeTtsClient";
 
 export const runtime = "nodejs";
 
@@ -32,26 +32,19 @@ function pickVoice(lang: string, genderHint?: "anna" | "lehrer"): VoiceOpts {
   return { voice: "en-US-AriaNeural", lang: "en-US" };
 }
 
+/* rate multiplier (e.g. 0.85) → SSML percentage string ("-15%") */
+function rateToPct(rate: number | undefined): string {
+  if (!rate || rate <= 0) return "+0%";
+  const pct = Math.max(-50, Math.min(50, Math.round((rate - 1) * 100)));
+  return `${pct >= 0 ? "+" : ""}${pct}%`;
+}
+
 /* tiny in-memory cache — repeated sentences (avatars, exams) cost zero repeat calls */
 const CACHE = new Map<string, Buffer>();
 const CACHE_MAX = 300;
 
-function cacheKey(text: string, voice: string): string {
-  return crypto.createHash("sha1").update(`${voice}::${text}`).digest("hex");
-}
-
-async function edgeTtsBuffer(text: string, opts: VoiceOpts): Promise<Buffer | null> {
-  try {
-    const tts = new EdgeTTS({ voice: opts.voice, lang: opts.lang, timeout: 15000 });
-    const chunks: Buffer[] = [];
-    for await (const chunk of tts.streamAudio(text.slice(0, 1200))) {
-      if (Buffer.isBuffer(chunk)) chunks.push(chunk);
-    }
-    const buf = Buffer.concat(chunks);
-    return buf.length > 500 ? buf : null; // too small = failure
-  } catch {
-    return null;
-  }
+function cacheKey(text: string, voice: string, rate: string): string {
+  return crypto.createHash("sha1").update(`${voice}::${rate}::${text}`).digest("hex");
 }
 
 async function elevenLabsBuffer(text: string): Promise<Buffer | null> {
@@ -82,11 +75,13 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const text: string = String(body?.text ?? "").slice(0, 1200);
   const lang: string = String(body?.lang ?? "de-DE");
+  const rate = typeof body?.rate === "number" ? body.rate : undefined;
   const genderHint = body?.gender === "lehrer" ? "lehrer" : body?.gender === "anna" ? "anna" : undefined;
   if (!text.trim()) return NextResponse.json({ error: "empty text" }, { status: 400 });
 
   const opts = pickVoice(lang, genderHint);
-  const key = cacheKey(text, opts.voice);
+  const ratePct = rateToPct(rate);
+  const key = cacheKey(text, opts.voice, ratePct);
   const cached = CACHE.get(key);
   if (cached) {
     return new Response(new Uint8Array(cached), {
@@ -94,8 +89,8 @@ export async function POST(req: Request) {
     });
   }
 
-  // 1) edge-tts (free, default)
-  const edge = await edgeTtsBuffer(text, opts);
+  // 1) edge-tts (free, default) — Sec-MS-GEC v2 DRM handled in edgeTtsClient
+  const edge = await edgeTtsBuffer(text, { voice: opts.voice, lang: opts.lang, rate: ratePct });
   if (edge) {
     if (CACHE.size >= CACHE_MAX) {
       const first = CACHE.keys().next().value;
