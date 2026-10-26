@@ -117,6 +117,23 @@ export async function ensureProfile(): Promise<string | null> {
   return name;
 }
 
+/* ── profile edit ── */
+
+/** Update the logged-in user's display name (profiles + auth metadata). */
+export async function updateProfile(displayName: string): Promise<{ error: string | null }> {
+  const sb = getSupabase();
+  if (!sb) return { error: "Auth is not configured." };
+  const user = await getUser();
+  if (!user) return { error: "Not logged in." };
+  const name = displayName.trim() || user.email?.split("@")[0] || "Learner";
+  const { error } = await sb
+    .from("profiles")
+    .upsert({ id: user.id, display_name: name }, { onConflict: "id" });
+  if (error) return { error: error.message };
+  await sb.auth.updateUser({ data: { full_name: name } });
+  return { error: null };
+}
+
 /* ── cloud progress sync (single JSON blob per user) ──
    Local keys synced: sprachdost_srs, sprachdost_deck_order,
    sprachdost_grammar_scores, sprachdost_progress          */

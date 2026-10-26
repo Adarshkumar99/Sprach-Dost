@@ -4,7 +4,7 @@
  * and writes a leaderboard row into weekly_scores.
  */
 
-import { pushProgressToCloud, getSupabase, getUser } from "./supabase";
+import { pushProgressToCloud, getSupabase, getUser, ensureProfile } from "./supabase";
 
 export type WeeklyData = {
   weekKey: string;          // ISO-ish "2026-W42"
@@ -63,9 +63,11 @@ async function upsertWeeklyScore(data: WeeklyData) {
   if (!sb) return;
   const user = await getUser();
   if (!user) return;
+  // name from profiles (picks up edits from Edit Profile), auth metadata as fallback
+  const profileName = await ensureProfile().catch(() => null);
   const meta = user.user_metadata ?? {};
   const displayName: string =
-    meta.full_name || meta.name || (user.email ? user.email.split("@")[0] : "Learner");
+    profileName || meta.full_name || meta.name || (user.email ? user.email.split("@")[0] : "Learner");
   await sb.from("weekly_scores").upsert(
     {
       user_id: user.id,
