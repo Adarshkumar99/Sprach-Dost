@@ -8,6 +8,8 @@ import WeeklyChallenges from "@/components/WeeklyChallenges";
 import Leaderboard from "@/components/Leaderboard";
 import WordOfTheDay from "@/components/WordOfTheDay";
 import WotDPushCard from "@/components/WotDPushCard";
+import DailyQuests from "@/components/DailyQuests";
+import StudyPlan from "@/components/StudyPlan";
 import { usePro } from "@/lib/usePro";
 
 export default function Practice() {
@@ -225,6 +227,34 @@ export default function Practice() {
         </Link>
 
         <Link
+          href="/practice/article-game"
+          className="glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-amber-400/50 transition-all"
+        >
+          <div className="text-5xl">🃏</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-lg mb-1">Der/Die/Das Sprint 🆕</div>
+            <p className="text-sm opacity-70">
+              60-second article game — {`>`}6,000 nouns, wrong ones come back till you master them. Beat your high score!
+            </p>
+          </div>
+          <span className="btn-primary text-sm whitespace-nowrap">▶ Play</span>
+        </Link>
+
+        <Link
+          href="/practice/verb-game"
+          className="glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-cyan-400/50 transition-all"
+        >
+          <div className="text-5xl">⚡</div>
+          <div className="text-center sm:text-left flex-1">
+            <div className="font-bold text-lg mb-1">Konjugation Sprint 🆕</div>
+            <p className="text-sm opacity-70">
+              60-second verb game — pronoun + verb, pick the right form. Stem-changers (isst, liest, fährt…) included.
+            </p>
+          </div>
+          <span className="btn-primary text-sm whitespace-nowrap">▶ Play</span>
+        </Link>
+
+        <Link
           href="/pronounce"
           className="md:col-span-2 glass rounded-3xl p-6 flex flex-col sm:flex-row items-center gap-5 hover:scale-[1.01] hover:border-cyan-400/50 transition-all"
         >
@@ -243,6 +273,8 @@ export default function Practice() {
         💡 Tip: For the best voice quality use Chrome or Edge, and allow microphone permission when asked.
       </p>
 
+      <StudyPlan />
+      <DailyQuests />
       <WordOfTheDay />
       <WotDPushCard />
       <WeeklyChallenges />

@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getSupabase, getUser, ensureProfile, onAuthChange } from "@/lib/supabase";
 import { getWeekly, weeklyXp, weekKey } from "@/lib/weekly";
+import { leagueForWeekXp, nextLeague } from "@/lib/xp";
 
 type Row = {
   user_id: string;
@@ -118,7 +119,17 @@ export default function Leaderboard() {
 
       {me && (
         <p className="text-xs opacity-60 mt-3 text-center">
-          Your XP this week: <b className="text-amber-300">{me.xp}</b>
+          {(() => {
+            const league = leagueForWeekXp(me.xp);
+            const next = nextLeague(me.xp);
+            return (
+              <>
+                <span className="font-bold">{league.icon} {league.name} League</span>
+                {next ? ` • ${next.min - me.xp} XP to ${next.name}` : " • top league!"} —{" "}
+              </>
+            );
+          })()}
+          <b className="text-amber-300">{me.xp} XP</b> this week
           {me.rank ? ` • rank #${me.rank}` : " • outside top 50, keep going!"}
         </p>
       )}

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { speakSmart, loadVoices } from "@/lib/speech";
 import { pushProgressToCloud } from "@/lib/supabase";
 import { recordWeekly } from "@/lib/weekly";
+import { awardXp } from "@/lib/xp";
 import { recordSession } from "@/lib/progress";
 
 /* ───────── types ───────── */
@@ -29,6 +30,7 @@ function markRead(level: string, id: string) {
     r[`${level}|${id}`] = Date.now();
     localStorage.setItem(READ_KEY, JSON.stringify(r));
     recordWeekly({ stories: 1 });
+    awardXp("story");
     recordSession({ minutes: 5, words: 0, level });
     pushProgressToCloud();
   }

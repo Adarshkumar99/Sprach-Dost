@@ -258,6 +258,7 @@ export default function AnnaPage() {
           minutes: Math.max(3, Math.round(transcriptRef.current.length * 0.6)),
           words: countVocab(rep.vocab),
           level,
+          voice: true,
         });
       } else {
         setFeedback(null);

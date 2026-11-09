@@ -13,6 +13,8 @@ import { vocabId, type VocabWord } from "@/lib/vocab";
 import { speakSmart, norm } from "@/lib/speech";
 import { gradeCard } from "@/lib/srs";
 import { recordWeekly } from "@/lib/weekly";
+import { awardXp } from "@/lib/xp";
+import { recordQuestActivity } from "@/lib/quests";
 
 type Level = "A1" | "A2" | "B1";
 type Check = {
@@ -109,6 +111,8 @@ export default function DictationPage() {
     const grade = score >= 90 ? 5 : score >= 70 ? 4 : score >= 50 ? 3 : 1;
     gradeCard(vocabId(word), grade);
     recordWeekly({ dictation: 1 });
+    awardXp("dictation");
+    recordQuestActivity("dictation", 1);
     setCheck({ matched, targetTokens, score, grade });
     if (score >= 70) setStreak((s) => s + 1);
     else setStreak(0);

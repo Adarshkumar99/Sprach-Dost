@@ -8,6 +8,8 @@
 
 import { pushProgressToCloud } from "./supabase";
 import { recordWeekly, weekKey } from "./weekly";
+import { awardXp } from "./xp";
+import { recordQuestActivity } from "./quests";
 
 export type ProgressData = {
   sessions: number;
@@ -45,7 +47,7 @@ export function getProgress(): ProgressData {
   }
 }
 
-function istDate(daysAgo = 0): string {
+export function istDate(daysAgo = 0): string {
   const d = new Date(Date.now() - daysAgo * 86400000);
   return d.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }); // YYYY-MM-DD
 }
@@ -66,7 +68,7 @@ function refreshFreezes(p: ProgressData): ProgressData {
   return p;
 }
 
-export function recordSession(opts: { minutes?: number; words?: number; level?: string }) {
+export function recordSession(opts: { minutes?: number; words?: number; level?: string; voice?: boolean }) {
   const p0 = getProgress();
   const p = refreshFreezes(p0);
   const t = istDate();
@@ -89,6 +91,11 @@ export function recordSession(opts: { minutes?: number; words?: number; level?: 
   p.lastDay = t;
   localStorage.setItem(KEY, JSON.stringify(p));
   recordWeekly({ minutes: opts.minutes ?? 5, words: opts.words ?? 0 }); // feed weekly challenges
+  if (opts.voice) {
+    awardXp("speaking"); // voice-session XP
+    recordQuestActivity("speaking", 1);
+  }
+  if (opts.words) recordQuestActivity("words", opts.words);
   pushProgressToCloud();
 }
 

@@ -25,6 +25,8 @@ import { saveExamAttempt, getExamAttempts, type ExamAttempt } from "@/lib/examSt
 import { addMistake } from "@/lib/mistakes";
 import { recordSession } from "@/lib/progress";
 import { recordWeekly } from "@/lib/weekly";
+import { awardXp } from "@/lib/xp";
+import { recordQuestActivity } from "@/lib/quests";
 import { loadSeries, FREE_COUNT, SERIES_LEVELS, type SeriesLevel, type SeriesTest } from "@/lib/testSeries";
 import { usePro } from "@/lib/usePro";
 
@@ -341,6 +343,7 @@ ${written.trim()}`;
     if (!parts) return;
     recordWeekly({ examMinutes: Math.max(1, Math.round(elapsed / 60)) });
     recordSession({ minutes: Math.max(1, Math.round(elapsed / 60)), words: 0, level: activeLevel });
+    awardXp("exam");
     setPhase("done");
   };
 

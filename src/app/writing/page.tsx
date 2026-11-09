@@ -15,6 +15,7 @@ import {
   type ExamWritingReport,
 } from "@/lib/parse";
 import { recordSession } from "@/lib/progress";
+import { awardXp } from "@/lib/xp";
 import { loadAttempts, saveAttempt } from "@/lib/writingStore";
 
 const LEVELS: ExamLevel[] = ["A1", "A2", "B1"];
@@ -95,6 +96,7 @@ ${text.trim()}`,
       });
       setAttempts(loadAttempts());
       recordSession({ minutes: 4, words: 0, level });
+      awardXp("writing");
     } catch {
       setError("Network error — please try again.");
     } finally {

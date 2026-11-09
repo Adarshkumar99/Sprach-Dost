@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { speakSmart, loadVoices } from "@/lib/speech";
 import { pushProgressToCloud } from "@/lib/supabase";
 import { gradeCard, getCardState } from "@/lib/srs";
+import { awardXp } from "@/lib/xp";
+import { recordQuestActivity } from "@/lib/quests";
 
 /* ───────── types ───────── */
 type GrammarQuestion = { q: string; options: string[]; answer: number; why?: string };
@@ -117,7 +119,7 @@ export default function GrammarPage() {
   const pick = useCallback((i: number, set: GrammarQuestion[]) => {
     if (picked !== null) return;
     setPicked(i);
-    if (i === set[qIdx].answer) setCorrectCount((c) => c + 1);
+    if (i === set[qIdx].answer) { setCorrectCount((c) => c + 1); awardXp("grammar"); recordQuestActivity("grammar", 1); }
   }, [picked, qIdx]);
 
   const next = useCallback((topic: GrammarTopic, set: GrammarQuestion[], correct: number) => {

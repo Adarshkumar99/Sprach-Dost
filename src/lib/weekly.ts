@@ -14,6 +14,7 @@ export type WeeklyData = {
   examMinutes: number;      // exam simulator minutes
   pronCorrect: number;      // pronunciation trainer correct answers
   dictation: number;        // dictation exercises completed
+  games: number;            // speed-game correct answers (article/verb)
 };
 
 export const GOALS = [
@@ -35,7 +36,7 @@ export function weekKey(d = new Date()): string {
   return `${tmp.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
 }
 
-const EMPTY: WeeklyData = { weekKey: "", words: 0, minutes: 0, stories: 0, examMinutes: 0, pronCorrect: 0, dictation: 0 };
+const EMPTY: WeeklyData = { weekKey: "", words: 0, minutes: 0, stories: 0, examMinutes: 0, pronCorrect: 0, dictation: 0, games: 0 };
 
 export function getWeekly(): WeeklyData {
   if (typeof window === "undefined") return EMPTY;
@@ -54,7 +55,7 @@ export function getWeekly(): WeeklyData {
 
 /** XP for the weekly leaderboard */
 export function weeklyXp(d: WeeklyData): number {
-  return d.words * 2 + d.minutes + d.stories * 10 + d.dictation * 3 + d.pronCorrect;
+  return d.words * 2 + d.minutes + d.stories * 10 + d.dictation * 3 + d.pronCorrect + d.games;
 }
 
 /** Push (or create) this user's leaderboard row for the current week. Fire & forget. */
@@ -94,6 +95,7 @@ export function recordWeekly(part: Partial<Omit<WeeklyData, "weekKey">>) {
     examMinutes: d.examMinutes + (part.examMinutes ?? 0),
     pronCorrect: d.pronCorrect + (part.pronCorrect ?? 0),
     dictation: d.dictation + (part.dictation ?? 0),
+    games: d.games + (part.games ?? 0),
   };
   localStorage.setItem(KEY, JSON.stringify(out));
   pushProgressToCloud();

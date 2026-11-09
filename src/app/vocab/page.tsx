@@ -8,6 +8,7 @@ import { vocabId, type VocabWord } from "@/lib/vocab";
 import { loadAllWords, topicsOfLevel, wordsForLevel } from "@/lib/vocabStore";
 import { gradeCard, fullStats, dueCards, isNew, getDeckOrder, saveDeckOrder, clearDeckOrder } from "@/lib/srs";
 import { recordSession } from "@/lib/progress";
+import { awardXp } from "@/lib/xp";
 
 type Phase = "setup" | "session" | "done";
 type Mode = "learn" | "review" | "quiz";
@@ -161,7 +162,7 @@ export default function VocabPage() {
     setPicked(i);
     const right = i === item.correctIndex;
     gradeCard(vocabId(item.word), right ? 4 : 1); // quiz results feed spaced repetition
-    if (right) setCorrectCount((c) => c + 1);
+    if (right) { setCorrectCount((c) => c + 1); awardXp("flashcard"); }
   }, [picked, quizDeck, idx]);
 
   const nextQuiz = useCallback((pickedNow: number | null) => {
@@ -181,7 +182,7 @@ export default function VocabPage() {
     const card = deck[idx];
     if (!card) return;
     gradeCard(vocabId(card), g);
-    if (g >= 3) setCorrectCount((c) => c + 1);
+    if (g >= 3) { setCorrectCount((c) => c + 1); awardXp("flashcard"); }
     const done = idx + 1 >= deck.length;
     setGradedCount((c) => c + 1);
     if (done) {

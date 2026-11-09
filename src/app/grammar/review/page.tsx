@@ -11,6 +11,8 @@ import { useCallback, useEffect, useState } from "react";
 import { speakSmart, loadVoices } from "@/lib/speech";
 import { gradeCard, getCardState } from "@/lib/srs";
 import { recordSession } from "@/lib/progress";
+import { awardXp } from "@/lib/xp";
+import { recordQuestActivity } from "@/lib/quests";
 import { pushProgressToCloud } from "@/lib/supabase";
 
 type GrammarQuestion = { q: string; options: string[]; answer: number; why?: string };
@@ -105,7 +107,7 @@ export default function GrammarReviewPage() {
   const pick = (i: number, q: GrammarQuestion) => {
     if (picked !== null) return;
     setPicked(i);
-    if (i === q.answer) setCorrectCount((c) => c + 1);
+    if (i === q.answer) { setCorrectCount((c) => c + 1); awardXp("grammar"); recordQuestActivity("grammar", 1); }
   };
 
   /* ─── loading ─── */

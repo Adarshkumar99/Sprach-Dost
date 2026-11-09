@@ -396,11 +396,11 @@ export default function FreeTalkPage() {
       });
       const data = await res.json();
       const rep = data.reply ? parseFeedback(data.reply) : null;
-      if (rep) recordSession({ minutes, words: countVocab(rep.vocab), level: "Free Talk" });
+      if (rep) recordSession({ minutes, words: countVocab(rep.vocab), level: "Free Talk", voice: true });
       setFeedback(rep);
     } catch {
       setFeedback(null);
-      recordSession({ minutes, words: 0, level: "Free Talk" });
+      recordSession({ minutes, words: 0, level: "Free Talk", voice: true });
     }
     setEnding(false);
     setPhase("feedback");
